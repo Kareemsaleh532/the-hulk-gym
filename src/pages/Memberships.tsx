@@ -1,0 +1,318 @@
+import React, { useState } from 'react';
+import { useGym } from '../context/GymContext';
+import { useMembers } from '../hooks/useMembers';
+import { useRenewMembership } from '../hooks/useMemberships';
+import { Badge } from '../components/common/Badge';
+import { Modal } from '../components/common/Modal';
+import { EmptyState } from '../components/common/EmptyState';
+import { Award, RefreshCw, Eye, CheckCircle, Clock, AlertTriangle, Loader2 } from 'lucide-react';
+
+type SubTabType = 'active' | 'expired' | 'expiring';
+
+export const Memberships: React.FC = () => {
+  const { plans, setTab, addToast } = useGym();
+  const { members, refetch: refetchMembers } = useMembers();
+  const { renewMembership, loading: renewing } = useRenewMembership();
+  const [activeSubTab, setActiveSubTab] = useState<SubTabType>('active');
+
+  // Renew modal state
+  const [isRenewOpen, setIsRenewOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState('');
+  const [renewPlanId, setRenewPlanId] = useState(plans[0]?.id || 'plan-basic');
+  const [renewStartDate, setRenewStartDate] = useState(() => {
+    return new Date().toISOString().split('T')[0];
+  });
+
+  // Filter members based on active sub tab
+  const tabMembers = members.filter((m) => m.status === activeSubTab);
+
+  const getPlanName = (planId: string) => {
+    const plan = plans.find((p) => p.id === planId);
+    return plan ? plan.name : 'باقة غير معروفة';
+  };
+
+  const getActiveCount = (planId: string) => {
+    return members.filter((m) => m.planId === planId && m.status === 'active').length;
+  };
+
+  const openRenewModal = (memberId: string, currentPlanId: string) => {
+    setSelectedMemberId(memberId);
+    setRenewPlanId(currentPlanId);
+    setRenewStartDate(new Date().toISOString().split('T')[0]);
+    setIsRenewOpen(true);
+  };
+
+  const handleRenewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedMemberId) return;
+
+    try {
+      await renewMembership(selectedMemberId, renewPlanId, renewStartDate);
+      addToast('success', 'تم تجديد الاشتراك بنجاح');
+      refetchMembers();
+      setIsRenewOpen(false);
+      setSelectedMemberId('');
+    } catch (err) {
+      addToast('error', 'حدث خطأ أثناء تجديد الاشتراك');
+    }
+  };
+
+  // Helper to format plan duration in Arabic
+  const formatDuration = (months: number) => {
+    if (months === 1) return 'شهر واحد';
+    if (months === 2) return 'شهران';
+    if (months === 3) return '٣ أشهر';
+    if (months === 6) return '٦ أشهر';
+    if (months === 12) return 'سنة كاملة (١٢ شهرًا)';
+    return `${months} أشهر`;
+  };
+
+  return (
+    <div className="space-y-8 animate-fade-in pb-10">
+      {/* Header */}
+      <div>
+        <h2 className="text-xl font-black text-slate-800 tracking-tight">إدارة الاشتراكات</h2>
+        <p className="text-sm text-slate-500 font-medium mt-0.5">
+          مراجعة باقات اشتراكات النادي ومراقبة دورة حياة اشتراكات العملاء.
+        </p>
+      </div>
+
+      {/* Grid of Plans */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {plans.map((plan) => {
+          const count = getActiveCount(plan.id);
+          let planBorder = 'border-slate-100';
+          let iconColor = 'text-slate-400 bg-slate-50';
+
+          if (plan.durationMonths <= 3) {
+            planBorder = 'border-slate-100';
+            iconColor = 'text-slate-400 bg-slate-50';
+          } else if (plan.durationMonths <= 6) {
+            planBorder = 'border-indigo-100 shadow-sm shadow-indigo-100/20';
+            iconColor = 'text-indigo-500 bg-indigo-50';
+          } else {
+            planBorder = 'border-emerald-100 shadow-md shadow-emerald-50/40';
+            iconColor = 'text-emerald-500 bg-emerald-50';
+          }
+
+          return (
+            <div
+              key={plan.id}
+              className={`bg-white border rounded-2xl p-6 flex flex-col justify-between hover:shadow-lg transition-all duration-300 ${planBorder}`}
+            >
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <div className={`p-2.5 rounded-xl border border-slate-100/50 ${iconColor}`}>
+                    <Award className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg">
+                    {formatDuration(plan.durationMonths)}
+                  </span>
+                </div>
+
+                <h3 className="text-base font-black text-slate-800 tracking-tight">{plan.name}</h3>
+                
+                <div className="flex items-baseline mt-2 mb-4">
+                  <span className="text-2xl font-black text-slate-850 tracking-tight">{plan.price} دولار</span>
+                  <span className="text-xs text-slate-400 font-bold mr-1">/ باقة</span>
+                </div>
+
+                <ul className="space-y-2 text-xs font-semibold text-slate-500 mb-6">
+                  {plan.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-emerald-500 font-black mt-0.5">•</span>
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="pt-4 border-t border-slate-50 flex items-center justify-between text-xs font-semibold">
+                <span className="text-slate-400">الأعضاء النشطون</span>
+                <span className="text-slate-800 font-black bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
+                  {count} مسجل
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Sub tabs Navigation */}
+      <div className="bg-white border border-slate-100 rounded-2xl shadow-xs overflow-hidden">
+        
+        {/* Tab triggers */}
+        <div className="flex border-b border-slate-100 bg-slate-50/50 p-2 gap-2">
+          {(['active', 'expiring', 'expired'] as SubTabType[]).map((tab) => {
+            let count = members.filter((m) => m.status === tab).length;
+            let tabLabel = 'البرامج النشطة';
+            let tabIcon = <CheckCircle className="h-4 w-4" />;
+            let activeColor = 'bg-white text-emerald-600 border-emerald-200 shadow-xs';
+
+            if (tab === 'expiring') {
+              tabLabel = 'أوشكت على الانتهاء';
+              tabIcon = <Clock className="h-4 w-4" />;
+              activeColor = 'bg-white text-amber-600 border-amber-200 shadow-xs';
+            } else if (tab === 'expired') {
+              tabLabel = 'منتهية الصلاحية';
+              tabIcon = <AlertTriangle className="h-4 w-4" />;
+              activeColor = 'bg-white text-rose-600 border-rose-200 shadow-xs';
+            }
+
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveSubTab(tab)}
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl border border-transparent transition-all focus:outline-none cursor-pointer ${
+                  activeSubTab === tab
+                    ? activeColor
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100/60'
+                }`}
+              >
+                {tabIcon}
+                <span>{tabLabel}</span>
+                <span className="px-1.5 py-0.5 text-[10px] rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab Contents */}
+        {tabMembers.length === 0 ? (
+          <EmptyState
+            title={`لا يوجد أعضاء ${activeSubTab === 'active' ? 'نشطون' : activeSubTab === 'expiring' ? 'تنتهي صلاحيتهم قريبًا' : 'منتهية صلاحيتهم'}`}
+            description={`لا يوجد حاليًا أي أعضاء في النادي يندرجون تحت تصنيف ${activeSubTab === 'active' ? 'النشطين' : activeSubTab === 'expiring' ? 'الذين يوشك اشتراكهم على الانتهاء' : 'منتهيي الصلاحية'}.`}
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="bg-slate-50/30 border-b border-slate-100 text-slate-400 text-[9px] font-extrabold uppercase tracking-wider">
+                  <th className="px-6 py-3">ملف العميل</th>
+                  <th className="px-6 py-3">البرنامج المسجل</th>
+                  <th className="px-6 py-3">تاريخ البدء</th>
+                  <th className="px-6 py-3">تاريخ الانتهاء</th>
+                  <th className="px-6 py-3">الحالة</th>
+                  <th className="px-6 py-3 text-left">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                {tabMembers.map((member) => {
+                  const initials = member.name
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .toUpperCase()
+                    .slice(0, 2);
+
+                  return (
+                    <tr key={member.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center font-bold text-[10px]">
+                            {initials}
+                          </div>
+                          <div>
+                            <span className="block font-bold text-slate-800">{member.name}</span>
+                            <span className="block text-[10px] text-slate-400 mt-0.5">{member.phone}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded text-[10px]">
+                          {getPlanName(member.planId)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3.5 text-slate-500 font-semibold">{member.startDate}</td>
+                      <td className="px-6 py-3.5 text-slate-500 font-semibold">{member.endDate}</td>
+                      <td className="px-6 py-3.5">
+                        <Badge type={member.status} />
+                      </td>
+                      <td className="px-6 py-3.5 text-left">
+                        <div className="inline-flex gap-2">
+                          <button
+                            onClick={() => setTab('member-details', member.id)}
+                            className="p-1.5 rounded-lg border border-slate-100 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-all focus:outline-none cursor-pointer"
+                            title="عرض التفاصيل"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => openRenewModal(member.id, member.planId)}
+                            className="p-1.5 rounded-lg border border-slate-100 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100 transition-all focus:outline-none cursor-pointer"
+                            title="تجديد الاشتراك"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Renew Modal */}
+      <Modal
+        isOpen={isRenewOpen}
+        onClose={() => setIsRenewOpen(false)}
+        title="تجديد برنامج الاشتراك"
+      >
+        <form onSubmit={handleRenewSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+              اختر برنامج الاشتراك
+            </label>
+            <select
+              value={renewPlanId}
+              onChange={(e) => setRenewPlanId(e.target.value)}
+              className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+            >
+              {plans.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.price} دولار / {formatDuration(p.durationMonths)})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+              تاريخ بدء التجديد
+            </label>
+            <input
+              type="date"
+              required
+              value={renewStartDate}
+              onChange={(e) => setRenewStartDate(e.target.value)}
+              className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setIsRenewOpen(false)}
+              className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              disabled={renewing}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold rounded-xl text-xs transition-colors inline-flex items-center gap-2"
+            >
+              {renewing && <Loader2 className="h-3 w-3 animate-spin" />}
+              تأكيد التجديد
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+};
