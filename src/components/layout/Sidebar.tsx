@@ -10,6 +10,8 @@ import {
   LogOut,
   X,
   PlusCircle,
+  ShieldCheck,
+  Wallet,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -26,6 +28,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { id: 'memberships', name: 'خطط العضوية', icon: Award },
     { id: 'payments', name: 'سجل المدفوعات', icon: DollarSign },
     { id: 'coaches', name: 'فريق المدربين', icon: UserCheck },
+    ...(currentAdmin?.role === 'admin' || currentAdmin?.role === 'manager' 
+      ? [
+          { id: 'accounting', name: 'المحاسبة والمالية', icon: Wallet },
+          { id: 'admin', name: 'إدارة النظام', icon: ShieldCheck }
+        ] 
+      : []),
     { id: 'settings', name: 'إعدادات البوابة', icon: Settings },
   ];
 

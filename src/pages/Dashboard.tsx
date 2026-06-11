@@ -109,14 +109,14 @@ export const Dashboard: React.FC = () => {
           return (
             <div
               key={idx}
-              className="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                     {stat.label}
                   </p>
-                  <h3 className="text-2xl font-black text-slate-800 mt-2 tracking-tight">
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mt-2 tracking-tight">
                     {stat.value}
                   </h3>
                 </div>
@@ -124,8 +124,8 @@ export const Dashboard: React.FC = () => {
                   <Icon className="h-5 w-5" />
                 </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-500">{stat.change}</span>
+              <div className="mt-4 pt-3 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-500 dark:text-slate-400">{stat.change}</span>
                 <span className="flex items-center gap-0.5 font-bold text-emerald-600">
                   <TrendingUp className="h-3 w-3" />
                   <span>مباشر</span>
@@ -142,15 +142,15 @@ export const Dashboard: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Membership Status breakdown */}
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider mb-4">
               حالة صحة العضويات
             </h3>
             
             <div className="space-y-4">
               {/* Custom segmented progress bar (widths injected via component stylesheet) */}
               <style>{`.seg-active{width:${activePercent}%;}.seg-expiring{width:${expiringPercent}%;}.seg-expired{width:${expiredPercent}%;}`}</style>
-              <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden flex">
+              <div className="h-4 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
                 <div className="seg-active bg-emerald-500 h-full transition-all duration-500" title={`نشط: ${activePercent}%`} />
                 <div className="seg-expiring bg-amber-400 h-full transition-all duration-500" title={`قارب الانتهاء: ${expiringPercent}%`} />
                 <div className="seg-expired bg-rose-500 h-full transition-all duration-500" title={`منتهي: ${expiredPercent}%`} />
@@ -178,50 +178,50 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Quick Actions Panel */}
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider mb-4">
               إجراءات سريعة
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <button
                 onClick={() => setTab('add-member')}
-                className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/10 text-center transition-all group cursor-pointer"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-800 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/20 text-center transition-all group cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center mb-2 group-hover:scale-105 transition-all">
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-500 flex items-center justify-center mb-2 group-hover:scale-105 transition-all">
                   <UserPlus className="h-5 w-5" />
                 </div>
-                <span className="text-xs font-bold text-slate-700">تسجيل عميل</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">تسجيل عميل</span>
               </button>
 
               <button
                 onClick={() => setTab('payments')}
-                className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/10 text-center transition-all group cursor-pointer"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/20 text-center transition-all group cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center mb-2 group-hover:scale-105 transition-all">
+                <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500 flex items-center justify-center mb-2 group-hover:scale-105 transition-all">
                   <CreditCard className="h-5 w-5" />
                 </div>
-                <span className="text-xs font-bold text-slate-700">تسجيل دفعة</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">تسجيل دفعة</span>
               </button>
 
               <button
                 onClick={() => setTab('memberships')}
-                className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 hover:border-purple-200 hover:bg-purple-50/10 text-center transition-all group cursor-pointer"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-purple-200 dark:hover:border-purple-800 hover:bg-purple-50/10 dark:hover:bg-purple-950/20 text-center transition-all group cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-500 flex items-center justify-center mb-2 group-hover:scale-105 transition-all">
+                <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-500 flex items-center justify-center mb-2 group-hover:scale-105 transition-all">
                   <Award className="h-5 w-5" />
                 </div>
-                <span className="text-xs font-bold text-slate-700">تجديد خطة</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">تجديد خطة</span>
               </button>
 
               <button
                 onClick={() => setTab('settings')}
-                className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 hover:border-rose-200 hover:bg-rose-50/10 text-center transition-all group cursor-pointer"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-800 hover:bg-rose-50/10 dark:hover:bg-rose-950/20 text-center transition-all group cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center mb-2 group-hover:scale-105 transition-all">
+                <div className="w-10 h-10 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-500 flex items-center justify-center mb-2 group-hover:scale-105 transition-all">
                   <TrendingUp className="h-5 w-5" />
                 </div>
-                <span className="text-xs font-bold text-slate-700">الماليات</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">الماليات</span>
               </button>
             </div>
           </div>
@@ -229,9 +229,9 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Right 1 Column: Recent Activity Logs */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col h-[420px]">
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex flex-col h-[420px]">
           <div className="flex justify-between items-center mb-4 flex-shrink-0">
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
               <Activity className="h-4 w-4 text-emerald-500" />
               <span>سجل نشاط النظام</span>
             </h3>
@@ -246,10 +246,10 @@ export const Dashboard: React.FC = () => {
 
           <div className="flex-1 overflow-y-auto pr-1 space-y-4 custom-scrollbar">
             {logs.slice(0, 5).map((log) => {
-              let badgeColor = 'bg-slate-100 text-slate-500';
-              if (log.type === 'member_add') badgeColor = 'bg-emerald-50 text-emerald-500 border border-emerald-100';
-              if (log.type === 'payment_add') badgeColor = 'bg-blue-50 text-blue-500 border border-blue-100';
-              if (log.type === 'membership_renew') badgeColor = 'bg-purple-50 text-purple-500 border border-purple-100';
+              let badgeColor = 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+              if (log.type === 'member_add') badgeColor = 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 border border-emerald-100 dark:border-emerald-900/50';
+              if (log.type === 'payment_add') badgeColor = 'bg-blue-50 dark:bg-blue-950/30 text-blue-500 border border-blue-100 dark:border-blue-900/50';
+              if (log.type === 'membership_renew') badgeColor = 'bg-purple-50 dark:bg-purple-950/30 text-purple-500 border border-purple-100 dark:border-purple-900/50';
 
               return (
                 <div key={log.id} className="flex gap-3 text-xs leading-relaxed">
@@ -257,13 +257,13 @@ export const Dashboard: React.FC = () => {
                     <Activity className="h-3.5 w-3.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-700 break-words">
+                    <p className="font-semibold text-slate-700 dark:text-slate-300 break-words">
                       {log.description}
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-1 font-medium">
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
                       <span>{log.timestamp}</span>
                       <span>•</span>
-                      <span className="text-slate-500 font-semibold">{log.operatorName}</span>
+                      <span className="text-slate-500 dark:text-slate-400 font-semibold">{log.operatorName}</span>
                     </div>
                   </div>
                 </div>

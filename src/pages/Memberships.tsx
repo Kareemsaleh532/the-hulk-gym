@@ -11,7 +11,7 @@ type SubTabType = 'active' | 'expired' | 'expiring';
 
 export const Memberships: React.FC = () => {
   const { plans, setTab, addToast } = useGym();
-  const { members, refetch: refetchMembers } = useMembers();
+  const { members } = useMembers();
   const { renewMembership, loading: renewing } = useRenewMembership();
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>('active');
 
@@ -48,8 +48,7 @@ export const Memberships: React.FC = () => {
 
     try {
       await renewMembership(selectedMemberId, renewPlanId, renewStartDate);
-      addToast('success', 'تم تجديد الاشتراك بنجاح');
-      refetchMembers();
+      addToast('success', 'تم تجديد الاشتراك بنجاح!');
       setIsRenewOpen(false);
       setSelectedMemberId('');
     } catch (err) {
@@ -71,8 +70,8 @@ export const Memberships: React.FC = () => {
     <div className="space-y-8 animate-fade-in pb-10">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-black text-slate-800 tracking-tight">إدارة الاشتراكات</h2>
-        <p className="text-sm text-slate-500 font-medium mt-0.5">
+        <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">إدارة الاشتراكات</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
           مراجعة باقات اشتراكات النادي ومراقبة دورة حياة اشتراكات العملاء.
         </p>
       </div>
@@ -85,39 +84,39 @@ export const Memberships: React.FC = () => {
           let iconColor = 'text-slate-400 bg-slate-50';
 
           if (plan.durationMonths <= 3) {
-            planBorder = 'border-slate-100';
-            iconColor = 'text-slate-400 bg-slate-50';
+            planBorder = 'border-slate-100 dark:border-slate-800';
+            iconColor = 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800';
           } else if (plan.durationMonths <= 6) {
-            planBorder = 'border-indigo-100 shadow-sm shadow-indigo-100/20';
-            iconColor = 'text-indigo-500 bg-indigo-50';
+            planBorder = 'border-indigo-100 dark:border-indigo-900/50 shadow-sm shadow-indigo-100/20';
+            iconColor = 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30';
           } else {
-            planBorder = 'border-emerald-100 shadow-md shadow-emerald-50/40';
-            iconColor = 'text-emerald-500 bg-emerald-50';
+            planBorder = 'border-emerald-100 dark:border-emerald-900/50 shadow-md shadow-emerald-50/40';
+            iconColor = 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30';
           }
 
           return (
             <div
               key={plan.id}
-              className={`bg-white border rounded-2xl p-6 flex flex-col justify-between hover:shadow-lg transition-all duration-300 ${planBorder}`}
+              className={`bg-white dark:bg-slate-900 border rounded-2xl p-6 flex flex-col justify-between hover:shadow-lg transition-all duration-300 ${planBorder}`}
             >
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <div className={`p-2.5 rounded-xl border border-slate-100/50 ${iconColor}`}>
+                  <div className={`p-2.5 rounded-xl border border-slate-100/50 dark:border-slate-800/50 ${iconColor}`}>
                     <Award className="h-5 w-5" />
                   </div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg">
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2.5 py-1 rounded-lg">
                     {formatDuration(plan.durationMonths)}
                   </span>
                 </div>
 
-                <h3 className="text-base font-black text-slate-800 tracking-tight">{plan.name}</h3>
+                <h3 className="text-base font-black text-slate-800 dark:text-slate-100 tracking-tight">{plan.name}</h3>
                 
                 <div className="flex items-baseline mt-2 mb-4">
-                  <span className="text-2xl font-black text-slate-850 tracking-tight">{plan.price} شيكل</span>
-                  <span className="text-xs text-slate-400 font-bold mr-1">/ باقة</span>
+                  <span className="text-2xl font-black text-slate-850 dark:text-slate-100 tracking-tight">{plan.price} شيكل</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 font-bold mr-1">/ باقة</span>
                 </div>
 
-                <ul className="space-y-2 text-xs font-semibold text-slate-500 mb-6">
+                <ul className="space-y-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-6">
                   {plan.features.map((f, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <span className="text-emerald-500 font-black mt-0.5">•</span>
@@ -127,9 +126,9 @@ export const Memberships: React.FC = () => {
                 </ul>
               </div>
 
-              <div className="pt-4 border-t border-slate-50 flex items-center justify-between text-xs font-semibold">
-                <span className="text-slate-400">الأعضاء النشطون</span>
-                <span className="text-slate-800 font-black bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
+              <div className="pt-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between text-xs font-semibold">
+                <span className="text-slate-400 dark:text-slate-500">الأعضاء النشطون</span>
+                <span className="text-slate-800 dark:text-slate-200 font-black bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-700">
                   {count} مسجل
                 </span>
               </div>
@@ -139,24 +138,24 @@ export const Memberships: React.FC = () => {
       </div>
 
       {/* Sub tabs Navigation */}
-      <div className="bg-white border border-slate-100 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
         
         {/* Tab triggers */}
-        <div className="flex border-b border-slate-100 bg-slate-50/50 p-2 gap-2">
+        <div className="flex border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 p-2 gap-2">
           {(['active', 'expiring', 'expired'] as SubTabType[]).map((tab) => {
             let count = members.filter((m) => m.status === tab).length;
             let tabLabel = 'البرامج النشطة';
             let tabIcon = <CheckCircle className="h-4 w-4" />;
-            let activeColor = 'bg-white text-emerald-600 border-emerald-200 shadow-xs';
+            let activeColor = 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 shadow-xs';
 
             if (tab === 'expiring') {
               tabLabel = 'أوشكت على الانتهاء';
               tabIcon = <Clock className="h-4 w-4" />;
-              activeColor = 'bg-white text-amber-600 border-amber-200 shadow-xs';
+              activeColor = 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800 shadow-xs';
             } else if (tab === 'expired') {
               tabLabel = 'منتهية الصلاحية';
               tabIcon = <AlertTriangle className="h-4 w-4" />;
-              activeColor = 'bg-white text-rose-600 border-rose-200 shadow-xs';
+              activeColor = 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 shadow-xs';
             }
 
             return (
@@ -166,12 +165,12 @@ export const Memberships: React.FC = () => {
                 className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl border border-transparent transition-all focus:outline-none cursor-pointer ${
                   activeSubTab === tab
                     ? activeColor
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100/60'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/60 dark:hover:bg-slate-800/60'
                 }`}
               >
                 {tabIcon}
                 <span>{tabLabel}</span>
-                <span className="px-1.5 py-0.5 text-[10px] rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+                <span className="px-1.5 py-0.5 text-[10px] rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                   {count}
                 </span>
               </button>
@@ -189,7 +188,7 @@ export const Memberships: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="bg-slate-50/30 border-b border-slate-100 text-slate-400 text-[9px] font-extrabold uppercase tracking-wider">
+                <tr className="bg-slate-50/30 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[9px] font-extrabold uppercase tracking-wider">
                   <th className="px-6 py-3">ملف العميل</th>
                   <th className="px-6 py-3">البرنامج المسجل</th>
                   <th className="px-6 py-3">تاريخ البدء</th>
@@ -198,7 +197,7 @@ export const Memberships: React.FC = () => {
                   <th className="px-6 py-3 text-left">الإجراءات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {tabMembers.map((member) => {
                   const initials = member.name
                     .split(' ')
@@ -208,25 +207,25 @@ export const Memberships: React.FC = () => {
                     .slice(0, 2);
 
                   return (
-                    <tr key={member.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={member.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="px-6 py-3.5">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center font-bold text-[10px]">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-[10px]">
                             {initials}
                           </div>
                           <div>
-                            <span className="block font-bold text-slate-800">{member.name}</span>
-                            <span className="block text-[10px] text-slate-400 mt-0.5">{member.phone}</span>
+                            <span className="block font-bold text-slate-800 dark:text-slate-200">{member.name}</span>
+                            <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{member.phone}</span>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-3.5">
-                        <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded text-[10px]">
+                        <span className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2 py-0.5 rounded text-[10px]">
                           {getPlanName(member.planId)}
                         </span>
                       </td>
-                      <td className="px-6 py-3.5 text-slate-500 font-semibold">{member.startDate}</td>
-                      <td className="px-6 py-3.5 text-slate-500 font-semibold">{member.endDate}</td>
+                      <td className="px-6 py-3.5 text-slate-500 dark:text-slate-400 font-semibold">{member.startDate}</td>
+                      <td className="px-6 py-3.5 text-slate-500 dark:text-slate-400 font-semibold">{member.endDate}</td>
                       <td className="px-6 py-3.5">
                         <Badge type={member.status} />
                       </td>
@@ -234,14 +233,14 @@ export const Memberships: React.FC = () => {
                         <div className="inline-flex gap-2">
                           <button
                             onClick={() => setTab('member-details', member.id)}
-                            className="p-1.5 rounded-lg border border-slate-100 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-all focus:outline-none cursor-pointer"
+                            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-100 dark:hover:border-indigo-800 transition-all focus:outline-none cursor-pointer"
                             title="عرض التفاصيل"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => openRenewModal(member.id, member.planId)}
-                            className="p-1.5 rounded-lg border border-slate-100 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100 transition-all focus:outline-none cursor-pointer"
+                            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-100 dark:hover:border-emerald-800 transition-all focus:outline-none cursor-pointer"
                             title="تجديد الاشتراك"
                           >
                             <RefreshCw className="h-4 w-4" />
@@ -265,7 +264,7 @@ export const Memberships: React.FC = () => {
       >
         <form onSubmit={handleRenewSubmit} className="space-y-4">
           <div>
-            <label htmlFor="renew-plan" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="renew-plan" className="block text-xs font-bold text-slate-650 dark:text-slate-300 uppercase tracking-wider mb-2">
               اختر برنامج الاشتراك
             </label>
             <select
@@ -273,7 +272,7 @@ export const Memberships: React.FC = () => {
               aria-label="اختر برنامج الاشتراك"
               value={renewPlanId}
               onChange={(e) => setRenewPlanId(e.target.value)}
-              className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="block w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
             >
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -284,7 +283,7 @@ export const Memberships: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="renew-start-date" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="renew-start-date" className="block text-xs font-bold text-slate-650 dark:text-slate-300 uppercase tracking-wider mb-2">
               تاريخ بدء التجديد
             </label>
             <input
@@ -294,15 +293,15 @@ export const Memberships: React.FC = () => {
               required
               value={renewStartDate}
               onChange={(e) => setRenewStartDate(e.target.value)}
-              className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={() => setIsRenewOpen(false)}
-              className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors"
             >
               إلغاء
             </button>

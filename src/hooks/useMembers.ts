@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { memberService } from '../services/memberService';
 import type { Member, Payment } from '../types';
 
@@ -7,24 +7,22 @@ export const useMembers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchMembers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await memberService.getMembers();
-      setMembers(data);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('An error occurred while fetching members'));
-    } finally {
+  useEffect(() => {
+    setLoading(true);
+    const unsubscribe = memberService.subscribeToMembers((data, err) => {
+      if (err) {
+        setError(err);
+      } else {
+        setMembers(data);
+        setError(null);
+      }
       setLoading(false);
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    fetchMembers();
-  }, [fetchMembers]);
-
-  return { members, loading, error, refetch: fetchMembers };
+  return { members, loading, error };
 };
 
 export const useCreateMember = () => {

@@ -1,7 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Admin, TabType, LogEntry, Plan, Coach } from '../types';
-import { INITIAL_COACHES, INITIAL_PLANS, INITIAL_LOGS } from '../mockData';
+import { INITIAL_LOGS } from '../mockData';
+import { seedFirebaseDefaultData } from '../lib/firebase';
+import { planService } from '../services/planService';
+import { coachService } from '../services/coachService';
+import { staffService } from '../services/staffService';
 
 interface Toast {
   id: string;
@@ -25,13 +28,16 @@ interface GymContextType {
   setTab: (tab: TabType, memberId?: string | null) => void;
   toggleTheme: () => void;
   addLog: (type: LogEntry['type'], description: string) => void;
+  refetchPlans: () => Promise<void>;
+  refetchCoaches: () => Promise<void>;
 }
 
 const GymContext = createContext<GymContextType | undefined>(undefined);
 
 export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [coaches] = useState<Coach[]>(INITIAL_COACHES);
-  const [plans] = useState<Plan[]>(INITIAL_PLANS);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [dbReady, setDbReady] = useState(false);
 
   const [logs, setLogs] = useState<LogEntry[]>(() => {
     const saved = localStorage.getItem('hulk_v2_logs');
@@ -40,29 +46,48 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [currentAdmin, setCurrentAdmin] = useState<Admin | null>(() => {
     const saved = localStorage.getItem('hulk_v2_admin');
-    return saved ? JSON.parse(saved) : {
-      id: 'admin-1',
-      name: 'جون هلكرسون',
-      email: 'admin@hulkgym.com',
-      role: 'admin',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-    };
+    return saved ? JSON.parse(saved) : null;
   });
 
   const [activeTab, setActiveTab] = useState<TabType>(() => {
-    return currentAdmin ? 'dashboard' : 'login';
+    const saved = localStorage.getItem('hulk_v2_admin');
+    return saved ? 'dashboard' : 'login';
   });
 
   const [currentMemberId, setCurrentMemberId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  // Theme support
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('hulk_theme');
     return (saved as 'light' | 'dark') || 'light';
   });
 
-  // Sync to local storage
+  // ─── DB Initialization ───────────────────────────────────────────────────
+  useEffect(() => {
+    seedFirebaseDefaultData().then(() => {
+      setDbReady(true);
+    });
+  }, []);
+
+  const refetchPlans = useCallback(async () => {
+    const data = await planService.getPlans();
+    setPlans(data);
+  }, []);
+
+  const refetchCoaches = useCallback(async () => {
+    const data = await coachService.getCoaches();
+    setCoaches(data);
+  }, []);
+
+  useEffect(() => {
+    if (dbReady) {
+      refetchPlans();
+      refetchCoaches();
+    }
+  }, [dbReady, refetchPlans, refetchCoaches]);
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Sync logs & admin to localStorage
   useEffect(() => {
     localStorage.setItem('hulk_v2_logs', JSON.stringify(logs));
   }, [logs]);
@@ -75,7 +100,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [currentAdmin]);
 
-  // Apply theme to document
+  // Apply theme
   useEffect(() => {
     localStorage.setItem('hulk_theme', theme);
     if (theme === 'dark') {
@@ -85,155 +110,72 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
-  // Toast Helpers
+  // Toast helpers
   const addToast = (type: Toast['type'], message: string) => {
     const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, type, message }]);
+    setToasts(prev => [...prev, { id, type, message }]);
     setTimeout(() => removeToast(id), 4000);
   };
 
   const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  // Helper to add activity log
   const addLog = (type: LogEntry['type'], description: string) => {
     const newLog: LogEntry = {
       id: `log-${Math.random().toString(36).substring(2, 9)}`,
       type,
       description,
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      operatorName: currentAdmin?.name || 'System Operator',
+      operatorName: currentAdmin?.name || 'System',
     };
-    setLogs((prev) => [newLog, ...prev]);
+    setLogs(prev => [newLog, ...prev]);
   };
 
-  // Auth Operations
-  // Helper to fetch the staff profile linked to an auth.user id
-  const fetchStaffProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('staff_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (error || !data) return null;
-    return data as { user_id: string; name: string; email: string; role: string };
-  };
-
+  // ─── Auth using DB staff table ────────────────────────────────────────────
   const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error || !data?.user) {
-        addToast('error', 'البريد الإلكتروني أو كلمة المرور غير صالحة.');
-        return false;
-      }
+    // Ensure DB is seeded before login
+    await seedFirebaseDefaultData();
 
-      const user = data.user;
-      const profile = await fetchStaffProfile(user.id);
-      if (!profile) {
-        // Not a staff user
-        await supabase.auth.signOut();
-        addToast('error', 'ليس لديك صلاحية دخول إلى لوحة الموظفين. تواصل مع المسؤول.');
-        return false;
-      }
-
-      const admin: Admin = {
-        id: profile.user_id,
-        name: profile.name,
-        email: profile.email,
-        role: profile.role as any,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=22c55e&color=fff`
-      };
-
-      setCurrentAdmin(admin);
-      setActiveTab('dashboard');
-      addToast('success', `تم تسجيل الدخول باسم ${admin.name}`);
-      addLog('settings_update', 'تم تسجيل دخول المسؤول إلى بوابة الموظفين');
-      return true;
-    } catch (err) {
-      addToast('error', 'فشل الاتصال بخدمة المصادقة.');
+    const staffMember = await staffService.validateLogin(email, password);
+    if (!staffMember) {
+      addToast('error', 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
       return false;
     }
+
+    const admin: Admin = {
+      id: staffMember.id,
+      name: staffMember.name,
+      email: staffMember.email,
+      role: staffMember.role,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.name)}&background=22c55e&color=fff`,
+    };
+
+    setCurrentAdmin(admin);
+    setActiveTab('dashboard');
+    addToast('success', `مرحباً بعودتك، ${admin.name}!`);
+    addLog('settings_update', `تم تسجيل دخول ${admin.name} إلى لوحة التحكم`);
+    return true;
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
     setCurrentAdmin(null);
     setActiveTab('login');
     setCurrentMemberId(null);
     addToast('info', 'تم تسجيل الخروج من نظام إدارة النادي.');
   };
+  // ─────────────────────────────────────────────────────────────────────────
 
-  // Initialize auth session and listen to auth state changes
-  useEffect(() => {
-    let mounted = true;
-
-    (async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const profile = await fetchStaffProfile(session.user.id);
-          if (profile && mounted) {
-            setCurrentAdmin({
-              id: profile.user_id,
-              name: profile.name,
-              email: profile.email,
-              role: profile.role as any,
-              avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=22c55e&color=fff`
-            });
-            setActiveTab('dashboard');
-          } else if (mounted) {
-            setActiveTab('login');
-          }
-        }
-      } catch (e) {
-        // ignore
-      }
-    })();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const profile = await fetchStaffProfile(session.user.id);
-        if (profile && mounted) {
-          setCurrentAdmin({
-            id: profile.user_id,
-            name: profile.name,
-            email: profile.email,
-            role: profile.role as any,
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=22c55e&color=fff`
-          });
-          setActiveTab('dashboard');
-        }
-      } else if (mounted) {
-        setCurrentAdmin(null);
-        setActiveTab('login');
-      }
-    });
-
-    return () => {
-      mounted = false;
-      authListener?.subscription?.unsubscribe?.();
-    };
-  }, []);
-
-  // Navigation Helper
   const setTab = (tab: TabType, memberId: string | null = null) => {
     if (!currentAdmin && tab !== 'login') {
       setActiveTab('login');
       return;
     }
     setActiveTab(tab);
-    if (memberId) {
-      setCurrentMemberId(memberId);
-    }
+    if (memberId) setCurrentMemberId(memberId);
   };
-
-  // Removed local data operations for members and payments
 
   return (
     <GymContext.Provider
@@ -253,6 +195,8 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setTab,
         toggleTheme,
         addLog,
+        refetchPlans,
+        refetchCoaches,
       }}
     >
       {children}
@@ -262,8 +206,6 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 export const useGym = () => {
   const context = useContext(GymContext);
-  if (context === undefined) {
-    throw new Error('useGym must be used within a GymProvider');
-  }
+  if (context === undefined) throw new Error('useGym must be used within a GymProvider');
   return context;
 };

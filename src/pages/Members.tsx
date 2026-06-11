@@ -7,7 +7,7 @@ import { Search, Filter, Plus, Trash2, Eye, ChevronLeft, ChevronRight, UserX, Lo
 
 export const Members: React.FC = () => {
   const { plans, setTab } = useGym();
-  const { members, loading: membersLoading, refetch } = useMembers();
+  const { members, loading: membersLoading } = useMembers();
   const { deleteMember } = useDeleteMember();
 
   // Search & Filter state
@@ -54,7 +54,6 @@ export const Members: React.FC = () => {
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`هل أنت متأكد من حذف العضو ${name}؟ لا يمكن التراجع عن هذا الإجراء.`)) {
       await deleteMember(id);
-      refetch();
     }
   };
 

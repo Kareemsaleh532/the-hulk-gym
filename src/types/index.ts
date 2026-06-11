@@ -1,7 +1,7 @@
 export type MemberStatus = 'active' | 'expired' | 'expiring';
 export type PaymentStatus = 'paid' | 'pending' | 'failed';
 export type GenderType = 'Male' | 'Female' | 'Other';
-export type TabType = 'login' | 'dashboard' | 'members' | 'add-member' | 'member-details' | 'memberships' | 'payments' | 'coaches' | 'reports' | 'settings';
+export type TabType = 'login' | 'dashboard' | 'members' | 'add-member' | 'member-details' | 'memberships' | 'payments' | 'coaches' | 'reports' | 'settings' | 'admin' | 'accounting' | 'notifications';
 
 export interface User {
   id: string;
@@ -25,6 +25,7 @@ export interface Member {
   endDate: string;
   status: MemberStatus;
   notes: string;
+  coachId?: string;
 }
 
 export interface Plan {
@@ -64,3 +65,36 @@ export interface ActivityLog {
 
 // Alias used by GymContext
 export type LogEntry = ActivityLog;
+
+export interface DbTransaction {
+  id: string;
+  type: 'income' | 'expense';
+  category: 'membership' | 'product_sale' | 'salary' | 'maintenance' | 'utilities' | 'other';
+  amount: number;
+  date: string;
+  description: string;
+  reference_id?: string;
+  created_by: string;
+  created_at: string;
+}
+
+export interface DbMembership {
+  id: string;
+  member_id: string;
+  plan_name: string;
+  start_date: string;
+  end_date: string;
+  price: number;
+  status: string;
+  created_at?: string;
+}
+
+export interface DbPayment {
+  id: string;
+  member_id: string;
+  amount: number;
+  payment_method: string;
+  payment_date: string;
+  notes: string;
+  created_at?: string;
+}

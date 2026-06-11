@@ -2,18 +2,21 @@
 import React, { useState } from 'react';
 import { useGym } from '../context/GymContext';
 import { useCreateMember } from '../hooks/useMembers';
+import { useCoaches } from '../hooks/useCoaches';
 import type { GenderType, Payment } from '../types';
 import { Save, X, Info, Loader2 } from 'lucide-react';
 
 export const AddMember: React.FC = () => {
   const { plans, setTab, addToast } = useGym();
   const { createMember, loading } = useCreateMember();
+  const { coaches } = useCoaches();
 
   // Form states
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState<GenderType>('Male');
   const [dob, setDob] = useState('1995-01-01');
+  const [coachId, setCoachId] = useState('');
   const [planId, setPlanId] = useState(plans[0]?.id || 'plan-basic');
   const [startDate, setStartDate] = useState(() => {
     return new Date().toISOString().split('T')[0]; // Default to today
@@ -44,6 +47,7 @@ export const AddMember: React.FC = () => {
         phone: phone.trim(),
         gender,
         dob,
+        coachId: coachId || undefined,
         planId,
         startDate,
         notes: notes.trim(),
@@ -153,6 +157,24 @@ export const AddMember: React.FC = () => {
                   onChange={(e) => setDob(e.target.value)}
                   className="block w-full px-4 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/50 border border-slate-250 dark:border-slate-600 text-slate-800 dark:text-slate-200 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                 />
+              </div>
+
+              {/* Coach Selection */}
+              <div className="sm:col-span-2">
+                <label htmlFor="coach-id" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  إسناد مدرب شخصي (اختياري)
+                </label>
+                <select
+                  id="coach-id"
+                  value={coachId}
+                  onChange={(e) => setCoachId(e.target.value)}
+                  className="block w-full px-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-250 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
+                >
+                  <option value="">-- بدون مدرب --</option>
+                  {coaches.map(coach => (
+                    <option key={coach.id} value={coach.id}>{coach.name} - {coach.specialty}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

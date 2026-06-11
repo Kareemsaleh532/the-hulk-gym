@@ -4,8 +4,8 @@ import { Lock, Eye, EyeOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const { login } = useGym();
-  const [password, setPassword] = useState('admin');
-  const [email, setEmail] = useState('admin@hulkgym.com');
+  const [password, setPassword] = useState('examplepassword');
+  const [email, setEmail] = useState('example@hulkgym.com');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -42,30 +42,30 @@ export const Login: React.FC = () => {
         </div>
 
         {/* Info Tip */}
-        <div className="mb-6 p-3 rounded-xl bg-gray-200/40 dark:bg-slate-800/40 border border-gray-300 dark:border-slate-800 text-center">
+        {/* <div className="mb-6 p-3 rounded-xl bg-gray-200/40 dark:bg-slate-800/40 border border-gray-300 dark:border-slate-800 text-center">
           <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
             بيانات تجريبية: <code className="text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800">admin@hulkgym.com</code> / <code className="text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800">admin</code>
           </p>
-        </div>
+        </div> */}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email */}
           <div>
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">البريد الإلكتروني</label>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">البريد الإلكتروني</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="block w-full pr-10 pl-3 py-3 rounded-xl bg-gray-200 dark:bg-slate-800/60 border border-gray-300 dark:border-slate-700/80 text-slate-900 dark:text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium"
-              placeholder="admin@hulkgym.com"
+              placeholder="role@hulkgym.com"
             />
           </div>
           {/* Password */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">كلمة المرور</label>
+              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">كلمة المرور</label>
               <button
                 type="button"
                 onClick={() => alert('بيانات تجريبية: admin@hulkgym.com / admin')}
@@ -83,8 +83,8 @@ export const Login: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pr-10 pl-10 py-3 rounded-xl bg-gray-200 dark:bg-slate-800/60 border border-gray-300 dark:border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium"
-                placeholder="••••••••"
+                className="block w-full pr-10 pl-10 py-3 rounded-xl bg-gray-200 dark:bg-slate-800/60 border border-gray-300 dark:border-slate-700/80 text-slate-900 dark:text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium"
+                placeholder="••••••••••••••••"
               />
               <button
                 type="button"

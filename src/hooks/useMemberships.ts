@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { membershipService } from '../services/membershipService';
-import type { DbMembership } from '../types/supabase';
+import type { DbMembership } from '../types';
 
 export const useMemberships = () => {
   const [memberships, setMemberships] = useState<DbMembership[]>([]);

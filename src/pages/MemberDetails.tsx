@@ -3,6 +3,7 @@ import { useGym } from '../context/GymContext';
 import { useMembers, useUpdateMember } from '../hooks/useMembers';
 import { useRenewMembership } from '../hooks/useMemberships';
 import { usePayments, useCreatePayment } from '../hooks/usePayments';
+import { useCoaches } from '../hooks/useCoaches';
 import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { EmptyState } from '../components/common/EmptyState';
@@ -28,16 +29,18 @@ export const MemberDetails: React.FC = () => {
     addToast
   } = useGym();
 
-  const { members, refetch: refetchMembers } = useMembers();
-  const { payments, refetch: refetchPayments } = usePayments();
+  const { members } = useMembers();
+  const { payments } = usePayments();
   const { updateMember, loading: updating } = useUpdateMember();
   const { renewMembership, loading: renewing } = useRenewMembership();
   const { createPayment, loading: paying } = useCreatePayment();
+  const { coaches } = useCoaches();
 
   const member = members.find((m) => m.id === currentMemberId);
 
   // States
   const [editableNotes, setEditableNotes] = useState(member?.notes || '');
+  const [editableCoachId, setEditableCoachId] = useState(member?.coachId || '');
   const [isRenewOpen, setIsRenewOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
@@ -54,10 +57,11 @@ export const MemberDetails: React.FC = () => {
   const [payMethod, setPayMethod] = useState<'Cash' | 'Credit Card' | 'Bank Transfer' | 'Mobile Payment'>('Credit Card');
   const [payStatus, setPayStatus] = useState<'paid' | 'pending'>('paid');
 
-  // Reset notes if member changes
+  // Reset states if member changes
   React.useEffect(() => {
     if (member) {
       setEditableNotes(member.notes);
+      setEditableCoachId(member.coachId || '');
     }
   }, [member]);
 
@@ -66,7 +70,7 @@ export const MemberDetails: React.FC = () => {
       <div className="space-y-6 animate-fade-in py-10">
         <button
           onClick={() => setTab('members')}
-          className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
         >
           <ArrowRight className="h-4 w-4" />
           <span>العودة إلى الدليل</span>
@@ -84,11 +88,13 @@ export const MemberDetails: React.FC = () => {
 
   const handleSaveNotes = async () => {
     try {
-      await updateMember(member.id, { notes: editableNotes });
-      addToast('success', 'تم حفظ الملاحظات بنجاح');
-      refetchMembers();
+      await updateMember(member.id, { 
+        notes: editableNotes, 
+        coachId: editableCoachId || undefined 
+      });
+      addToast('success', 'تم حفظ بيانات العضو بنجاح');
     } catch (err) {
-      addToast('error', 'حدث خطأ أثناء حفظ الملاحظات');
+      addToast('error', 'حدث خطأ أثناء حفظ البيانات');
     }
   };
 
@@ -100,8 +106,6 @@ export const MemberDetails: React.FC = () => {
         status: renewPayStatus
       });
       addToast('success', 'تم تجديد الاشتراك بنجاح');
-      refetchMembers();
-      refetchPayments();
       setIsRenewOpen(false);
     } catch (err) {
       addToast('error', 'حدث خطأ أثناء تجديد الاشتراك');
@@ -120,7 +124,6 @@ export const MemberDetails: React.FC = () => {
         status: payStatus,
       });
       addToast('success', 'تم تسجيل إيصال الدفع بنجاح');
-      refetchPayments();
       setPayAmount('');
       setIsPaymentOpen(false);
     } catch (err) {
@@ -164,7 +167,7 @@ export const MemberDetails: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <button
           onClick={() => setTab('members')}
-          className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-850 transition-colors"
+          className="flex items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 transition-colors"
         >
           <ArrowRight className="h-4 w-4" />
           <span>العودة إلى الدليل</span>
@@ -172,7 +175,7 @@ export const MemberDetails: React.FC = () => {
         
         <div className="flex items-center gap-3">
           <Badge type={member.status} />
-          <span className="text-xs text-slate-400 font-bold">المعرف: {member.id}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 font-bold">المعرف: {member.id}</span>
         </div>
       </div>
 
@@ -182,53 +185,71 @@ export const MemberDetails: React.FC = () => {
         {/* Right Column (RTL context) / Left Column (visual): Personal info & Notes */}
         <div className="space-y-6">
           {/* Profile Card */}
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs text-center flex flex-col items-center">
-            <div className="w-20 h-20 rounded-full bg-slate-100 border-2 border-emerald-500/20 text-slate-700 flex items-center justify-center font-black text-xl mb-4 select-none shadow-inner">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-xs text-center flex flex-col items-center">
+            <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-emerald-500/20 text-slate-700 dark:text-slate-200 flex items-center justify-center font-black text-xl mb-4 select-none shadow-inner">
               {initials}
             </div>
             
-            <h3 className="text-lg font-black text-slate-800 tracking-tight">{member.name}</h3>
+            <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 tracking-tight">{member.name}</h3>
 
-            <div className="w-full border-t border-slate-50 my-5" />
+            <div className="w-full border-t border-slate-50 dark:border-slate-800/50 my-5" />
 
-            <div className="w-full text-right space-y-3.5 text-xs font-semibold text-slate-600">
+            <div className="w-full text-right space-y-3.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
               <div className="flex items-center gap-2.5">
-                <Phone className="h-4 w-4 text-slate-400" />
+                <Phone className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                 <span>{member.phone || 'لا يوجد هاتف مسجل'}</span>
               </div>
               <div className="flex items-center gap-2.5">
-                <User className="h-4 w-4 text-slate-400" />
+                <User className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                 <span>{translateGender(member.gender)}</span>
               </div>
               <div className="flex items-center gap-2.5">
-                <Calendar className="h-4 w-4 text-slate-400" />
+                <Calendar className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                 <span>تاريخ الميلاد: {member.dob}</span>
               </div>
             </div>
           </div>
 
-          {/* Notes Section */}
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 mb-4 flex items-center gap-1.5">
+          {/* Notes & Coach Section */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
+            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-3 mb-4 flex items-center gap-1.5">
               <FileText className="h-4 w-4" />
-              <span>ملاحظات ملف العضو</span>
+              <span>إعدادات المدرب والملاحظات</span>
             </h3>
 
             <div className="space-y-4">
-              <textarea
-                rows={4}
-                value={editableNotes}
-                onChange={(e) => setEditableNotes(e.target.value)}
-                className="w-full p-3 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500 transition-all resize-none"
-                placeholder="لا توجد ملاحظات مسجلة لهذا العضو بعد..."
-              />
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">المدرب الشخصي</label>
+                <select
+                  value={editableCoachId}
+                  onChange={(e) => setEditableCoachId(e.target.value)}
+                  className="block w-full p-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  <option value="">-- غير محدد --</option>
+                  {coaches.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.specialty})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">ملاحظات الملف</label>
+                <textarea
+                  rows={3}
+                  value={editableNotes}
+                  onChange={(e) => setEditableNotes(e.target.value)}
+                  className="w-full p-3 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-emerald-500 transition-all resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  placeholder="لا توجد ملاحظات مسجلة لهذا العضو بعد..."
+                />
+              </div>
+
               <button
                 onClick={handleSaveNotes}
                 disabled={updating}
-                className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs transition-all active:scale-98 cursor-pointer"
+                className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs transition-all active:scale-98 cursor-pointer"
               >
                 {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                <span>حفظ ملف الملاحظات</span>
+                <span>حفظ التعديلات</span>
               </button>
             </div>
           </div>
@@ -238,13 +259,13 @@ export const MemberDetails: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Membership Info */}
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
               <div>
-                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
                   تفاصيل الاشتراك النشط
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5 font-semibold">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 font-semibold">
                   تفاصيل الخطة الصالحة وجدول الفترات الزمنية.
                 </p>
               </div>
@@ -252,14 +273,14 @@ export const MemberDetails: React.FC = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => setIsRenewOpen(true)}
-                  className="flex items-center gap-1 px-3 py-2 rounded-xl bg-indigo-50 border border-indigo-150 text-indigo-700 hover:bg-indigo-100 font-bold text-xs transition-all cursor-pointer"
+                  className="flex items-center gap-1 px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-150 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-bold text-xs transition-all cursor-pointer"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                   <span>تجديد الاشتراك</span>
                 </button>
                 <button
                   onClick={() => setIsPaymentOpen(true)}
-                  className="flex items-center gap-1 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-150 text-emerald-700 hover:bg-emerald-100 font-bold text-xs transition-all cursor-pointer"
+                  className="flex items-center gap-1 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-150 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 font-bold text-xs transition-all cursor-pointer"
                 >
                   <PlusCircle className="h-3.5 w-3.5" />
                   <span>تسجيل دفعة</span>
@@ -269,29 +290,29 @@ export const MemberDetails: React.FC = () => {
 
             {/* Plan Details Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-semibold">
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100/50">
-                <span className="block text-slate-400 uppercase tracking-wider text-[10px]">الخطة الحالية</span>
-                <span className="block text-sm font-black text-slate-800 mt-1.5">{activePlan?.name || '—'}</span>
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100/50 dark:border-slate-700/50">
+                <span className="block text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">الخطة الحالية</span>
+                <span className="block text-sm font-black text-slate-800 dark:text-slate-100 mt-1.5">{activePlan?.name || '—'}</span>
               </div>
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100/50">
-                <span className="block text-slate-400 uppercase tracking-wider text-[10px]">تكلفة الاشتراك</span>
-                <span className="block text-sm font-black text-slate-800 mt-1.5">{activePlan?.price || '0.00'} شيكل</span>
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100/50 dark:border-slate-700/50">
+                <span className="block text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">تكلفة الاشتراك</span>
+                <span className="block text-sm font-black text-slate-800 dark:text-slate-100 mt-1.5">{activePlan?.price || '0.00'} شيكل</span>
               </div>
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100/50">
-                <span className="block text-slate-400 uppercase tracking-wider text-[10px]">تاريخ البدء</span>
-                <span className="block text-sm font-black text-slate-800 mt-1.5">{member.startDate}</span>
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100/50 dark:border-slate-700/50">
+                <span className="block text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">تاريخ البدء</span>
+                <span className="block text-sm font-black text-slate-800 dark:text-slate-100 mt-1.5">{member.startDate}</span>
               </div>
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100/50">
-                <span className="block text-slate-400 uppercase tracking-wider text-[10px]">تاريخ الانتهاء</span>
-                <span className="block text-sm font-black text-slate-850 mt-1.5">{member.endDate}</span>
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100/50 dark:border-slate-700/50">
+                <span className="block text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">تاريخ الانتهاء</span>
+                <span className="block text-sm font-black text-slate-850 dark:text-slate-100 mt-1.5">{member.endDate}</span>
               </div>
             </div>
           </div>
 
           {/* Payment History */}
-          <div className="bg-white border border-slate-100 rounded-2xl shadow-xs overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-              <h3 className="text-xs font-bold text-slate-805 uppercase tracking-wider">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30">
+              <h3 className="text-xs font-bold text-slate-805 dark:text-slate-100 uppercase tracking-wider">
                 سجل الفواتير والمدفوعات
               </h3>
             </div>
@@ -306,7 +327,7 @@ export const MemberDetails: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-right border-collapse">
                   <thead>
-                    <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-400 text-[9px] font-extrabold uppercase tracking-wider">
+                    <tr className="bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[9px] font-extrabold uppercase tracking-wider">
                       <th className="px-6 py-3">رقم الإيصال</th>
                       <th className="px-6 py-3">التاريخ</th>
                       <th className="px-6 py-3">طريقة الدفع</th>
@@ -314,13 +335,13 @@ export const MemberDetails: React.FC = () => {
                       <th className="px-6 py-3">الحالة</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-650">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold text-slate-650 dark:text-slate-300">
                     {memberPayments.map((p) => (
-                      <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-3.5 font-bold text-slate-800">{p.id}</td>
+                      <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="px-6 py-3.5 font-bold text-slate-800 dark:text-slate-200">{p.id}</td>
                         <td className="px-6 py-3.5">{p.date}</td>
-                        <td className="px-6 py-3.5">{translateMethod(p.method)}</td>
-                        <td className="px-6 py-3.5 font-bold text-slate-850">{p.amount.toFixed(2)} شيكل</td>
+                        <td className="px-6 py-3.5 text-slate-500 dark:text-slate-400">{translateMethod(p.method)}</td>
+                        <td className="px-6 py-3.5 font-bold text-slate-850 dark:text-slate-100">{p.amount.toFixed(2)} شيكل</td>
                         <td className="px-6 py-3.5">
                           <Badge type={p.status} />
                         </td>
@@ -333,23 +354,23 @@ export const MemberDetails: React.FC = () => {
           </div>
 
           {/* Membership History Timeline */}
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 mb-4 flex items-center gap-1.5">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
+            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-3 mb-4 flex items-center gap-1.5">
               <History className="h-4 w-4" />
               <span>سجل الاشتراكات</span>
             </h3>
 
             {/* Simple timeline adjusted for RTL */}
-            <div className="relative border-r border-slate-100 pr-4 space-y-5 text-xs font-semibold text-slate-600">
+            <div className="relative border-r border-slate-100 dark:border-slate-800 pr-4 space-y-5 text-xs font-semibold text-slate-600 dark:text-slate-400">
               <div className="relative">
-                <div className="absolute -right-[22.5px] top-1 bg-emerald-500 border border-white rounded-full w-3 h-3 shadow-sm" />
-                <p className="font-bold text-slate-850">تم الاشتراك في {activePlan?.name}</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">تاريخ البدء: {member.startDate} • تاريخ الانتهاء: {member.endDate}</p>
+                <div className="absolute -right-[22.5px] top-1 bg-emerald-500 border border-white dark:border-slate-900 rounded-full w-3 h-3 shadow-sm" />
+                <p className="font-bold text-slate-850 dark:text-slate-200">تم الاشتراك في {activePlan?.name}</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">تاريخ البدء: {member.startDate} • تاريخ الانتهاء: {member.endDate}</p>
               </div>
               <div className="relative">
-                <div className="absolute -right-[22.5px] top-1 bg-indigo-400 border border-white rounded-full w-3 h-3 shadow-sm" />
-                <p className="font-bold text-slate-800">تم تسجيل الملف الشخصي في الدليل</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">تم تهيئة ملف العميل في قاعدة البيانات</p>
+                <div className="absolute -right-[22.5px] top-1 bg-indigo-400 border border-white dark:border-slate-900 rounded-full w-3 h-3 shadow-sm" />
+                <p className="font-bold text-slate-800 dark:text-slate-200">تم تسجيل الملف الشخصي في الدليل</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">تم تهيئة ملف العميل في قاعدة البيانات</p>
               </div>
             </div>
           </div>
@@ -365,7 +386,7 @@ export const MemberDetails: React.FC = () => {
       >
         <form onSubmit={handleRenewSubmit} className="space-y-4">
           <div>
-            <label htmlFor="renew-plan" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="renew-plan" className="block text-xs font-bold text-slate-650 dark:text-slate-300 uppercase tracking-wider mb-2">
               اختر برنامج الاشتراك
             </label>
             <select
@@ -373,7 +394,7 @@ export const MemberDetails: React.FC = () => {
               aria-label="اختر برنامج الاشتراك"
               value={renewPlanId}
               onChange={(e) => setRenewPlanId(e.target.value)}
-              className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="block w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
             >
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -384,7 +405,7 @@ export const MemberDetails: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="renew-start-date" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="renew-start-date" className="block text-xs font-bold text-slate-650 dark:text-slate-300 uppercase tracking-wider mb-2">
               تاريخ بدء التجديد
             </label>
             <input
@@ -394,16 +415,16 @@ export const MemberDetails: React.FC = () => {
               required
               value={renewStartDate}
               onChange={(e) => setRenewStartDate(e.target.value)}
-              className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
             />
-            <p className="text-[10px] text-slate-400 font-medium mt-1">
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-1">
               اختر تاريخ بدء برنامج التجديد. القيمة الافتراضية هي اليوم.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="renew-pay-method" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+              <label htmlFor="renew-pay-method" className="block text-xs font-bold text-slate-650 dark:text-slate-300 uppercase tracking-wider mb-2">
                 طريقة الدفع
               </label>
               <select
@@ -411,7 +432,7 @@ export const MemberDetails: React.FC = () => {
                 aria-label="طريقة الدفع"
                 value={renewPayMethod}
                 onChange={(e) => setRenewPayMethod(e.target.value as any)}
-                className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                className="block w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
               >
                 <option value="Cash">نقدًا</option>
                 <option value="Credit Card">بطاقة ائتمانية</option>
@@ -421,7 +442,7 @@ export const MemberDetails: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="renew-pay-status" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+              <label htmlFor="renew-pay-status" className="block text-xs font-bold text-slate-650 dark:text-slate-300 uppercase tracking-wider mb-2">
                 حالة الدفع
               </label>
               <select
@@ -429,7 +450,7 @@ export const MemberDetails: React.FC = () => {
                 aria-label="حالة الدفع"
                 value={renewPayStatus}
                 onChange={(e) => setRenewPayStatus(e.target.value as any)}
-                className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                className="block w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
               >
                 <option value="paid">تم الدفع (Paid)</option>
                 <option value="pending">قيد الانتظار (Pending)</option>
@@ -438,11 +459,11 @@ export const MemberDetails: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={() => setIsRenewOpen(false)}
-              className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors"
             >
               إلغاء
             </button>
@@ -466,7 +487,7 @@ export const MemberDetails: React.FC = () => {
       >
         <form onSubmit={handlePaymentSubmit} className="space-y-4">
           <div>
-            <label htmlFor="pay-amount" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="pay-amount" className="block text-xs font-bold text-slate-650 dark:text-slate-300 uppercase tracking-wider mb-2">
               قيمة الفاتورة (شيكل)
             </label>
             <input
@@ -478,12 +499,12 @@ export const MemberDetails: React.FC = () => {
               placeholder="مثال: 49.99"
               value={payAmount}
               onChange={(e) => setPayAmount(e.target.value)}
-              className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 text-sm font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-850 dark:text-slate-100 text-sm font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
           </div>
 
           <div>
-            <label htmlFor="pay-method" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="pay-method" className="block text-xs font-bold text-slate-650 dark:text-slate-300 uppercase tracking-wider mb-2">
               طريقة الدفع
             </label>
             <select
@@ -491,7 +512,7 @@ export const MemberDetails: React.FC = () => {
               aria-label="طريقة الدفع"
               value={payMethod}
               onChange={(e) => setPayMethod(e.target.value as any)}
-              className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="block w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
             >
               <option value="Credit Card">بطاقة ائتمانية</option>
               <option value="Cash">نقدًا</option>
@@ -501,7 +522,7 @@ export const MemberDetails: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-slate-650 dark:text-slate-300 uppercase tracking-wider mb-2">
               حالة الدفع
             </label>
             <div className="flex gap-2">
@@ -512,8 +533,8 @@ export const MemberDetails: React.FC = () => {
                   onClick={() => setPayStatus(opt)}
                   className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${
                     payStatus === opt
-                      ? 'bg-slate-900 border-slate-900 text-white'
-                      : 'bg-slate-50 border-slate-200 text-slate-650 hover:bg-slate-105'
+                      ? 'bg-slate-900 border-slate-900 text-white dark:bg-emerald-600 dark:border-emerald-600'
+                      : 'bg-slate-50 border-slate-200 text-slate-650 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
                   }`}
                 >
                   {opt === 'paid' ? 'مدفوع' : 'معلق'}
@@ -522,11 +543,11 @@ export const MemberDetails: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={() => setIsPaymentOpen(false)}
-              className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors"
             >
               إلغاء
             </button>
