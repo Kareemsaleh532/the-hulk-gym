@@ -33,6 +33,8 @@ export const ToastContainer: React.FC = () => {
             <div className="flex-1 text-sm font-medium">{toast.message}</div>
             <button
               onClick={() => removeToast(toast.id)}
+              aria-label="إغلاق الإشعار"
+              title="إغلاق الإشعار"
               className="flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
             >
               <X className="h-4 w-4" />

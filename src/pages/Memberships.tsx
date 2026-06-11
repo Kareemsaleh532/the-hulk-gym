@@ -113,7 +113,7 @@ export const Memberships: React.FC = () => {
                 <h3 className="text-base font-black text-slate-800 tracking-tight">{plan.name}</h3>
                 
                 <div className="flex items-baseline mt-2 mb-4">
-                  <span className="text-2xl font-black text-slate-850 tracking-tight">{plan.price} دولار</span>
+                  <span className="text-2xl font-black text-slate-850 tracking-tight">{plan.price} شيكل</span>
                   <span className="text-xs text-slate-400 font-bold mr-1">/ باقة</span>
                 </div>
 
@@ -265,27 +265,31 @@ export const Memberships: React.FC = () => {
       >
         <form onSubmit={handleRenewSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="renew-plan" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
               اختر برنامج الاشتراك
             </label>
             <select
+              id="renew-plan"
+              aria-label="اختر برنامج الاشتراك"
               value={renewPlanId}
               onChange={(e) => setRenewPlanId(e.target.value)}
               className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
             >
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} ({p.price} دولار / {formatDuration(p.durationMonths)})
+                  {p.name} ({p.price} شيكل / {formatDuration(p.durationMonths)})
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="renew-start-date" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
               تاريخ بدء التجديد
             </label>
             <input
+              id="renew-start-date"
+              aria-label="تاريخ بدء التجديد"
               type="date"
               required
               value={renewStartDate}

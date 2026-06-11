@@ -5,7 +5,7 @@ import { User as UserIcon, Lock, Bell, Palette, Save } from 'lucide-react';
 type SettingsTab = 'profile' | 'security' | 'notifications' | 'theme';
 
 export const Settings: React.FC = () => {
-  const { currentAdmin, addToast } = useGym();
+  const { currentAdmin, addToast, theme, toggleTheme } = useGym();
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
 
   // Profile Form State
@@ -25,7 +25,6 @@ export const Settings: React.FC = () => {
 
   // Theme State
   const [accentColor, setAccentColor] = useState<'emerald' | 'blue' | 'amber'>('emerald');
-  const [darkMode, setDarkMode] = useState(false);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,11 +52,6 @@ export const Settings: React.FC = () => {
   };
 
   const handleSaveTheme = () => {
-    if (darkMode) {
-      addToast('info', 'يتم فرض الوضع الفاتح بموجب التصميم المؤسسي. تم قفل الوضع الداكن.');
-      setDarkMode(false);
-      return;
-    }
     addToast('success', `تم حفظ لوحة ألوان المظهر إلى: ${accentColor.toUpperCase()}`);
   };
 
@@ -114,10 +108,12 @@ export const Settings: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label htmlFor="settings-name" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                     اسم الموظف
                   </label>
                   <input
+                    id="settings-name"
+                    aria-label="اسم الموظف"
                     type="text"
                     required
                     value={name}
@@ -127,10 +123,12 @@ export const Settings: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label htmlFor="settings-role" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                     الدور في النظام
                   </label>
                   <select
+                    id="settings-role"
+                    aria-label="الدور في النظام"
                     value={role}
                     onChange={(e) => setRole(e.target.value as 'admin' | 'staff' | 'manager')}
                     className="block w-full px-3 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-755 focus:outline-none cursor-pointer"
@@ -142,10 +140,12 @@ export const Settings: React.FC = () => {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label htmlFor="settings-email" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                     البريد الإلكتروني لتسجيل الدخول
                   </label>
                   <input
+                    id="settings-email"
+                    aria-label="البريد الإلكتروني لتسجيل الدخول"
                     type="email"
                     required
                     value={email}
@@ -177,10 +177,12 @@ export const Settings: React.FC = () => {
 
               <div className="space-y-4 max-w-md">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label htmlFor="current-password" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                     كلمة المرور الحالية
                   </label>
                   <input
+                    id="current-password"
+                    aria-label="كلمة المرور الحالية"
                     type="password"
                     placeholder="••••••••"
                     value={currentPassword}
@@ -190,10 +192,12 @@ export const Settings: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label htmlFor="new-password" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                     كلمة المرور الجديدة
                   </label>
                   <input
+                    id="new-password"
+                    aria-label="كلمة المرور الجديدة"
                     type="password"
                     placeholder="••••••••"
                     value={newPassword}
@@ -203,10 +207,12 @@ export const Settings: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label htmlFor="confirm-password" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                     تأكيد كلمة المرور
                   </label>
                   <input
+                    id="confirm-password"
+                    aria-label="تأكيد كلمة المرور"
                     type="password"
                     placeholder="••••••••"
                     value={confirmPassword}
@@ -339,8 +345,8 @@ export const Settings: React.FC = () => {
                     <input
                       type="checkbox"
                       id="dark-mode-toggle"
-                      checked={darkMode}
-                      onChange={(e) => setDarkMode(e.target.checked)}
+                      checked={theme === 'dark'}
+                      onChange={() => toggleTheme()}
                       className="h-4.5 w-4.5 rounded border-slate-300 bg-slate-50 text-slate-900 focus:ring-slate-900"
                     />
                     <label htmlFor="dark-mode-toggle" className="text-xs font-bold text-slate-650 cursor-pointer select-none">

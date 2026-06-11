@@ -98,6 +98,8 @@ export const Members: React.FC = () => {
           {/* Status Filter */}
           <div className="relative flex-1 sm:flex-none">
             <select
+              id="status-filter"
+              aria-label="تصفية الحالة"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="block w-full sm:w-48 pl-3 pr-8 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer appearance-none"
@@ -115,6 +117,8 @@ export const Members: React.FC = () => {
           {/* Plan Filter */}
           <div className="relative flex-1 sm:flex-none">
             <select
+              id="plan-filter"
+              aria-label="تصفية الخطة"
               value={planFilter}
               onChange={(e) => setPlanFilter(e.target.value)}
               className="block w-full sm:w-48 pl-3 pr-8 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer appearance-none"
@@ -249,6 +253,8 @@ export const Members: React.FC = () => {
 
               <div className="inline-flex gap-1.5">
                 <button
+                  id="prev-page"
+                  aria-label="الصفحة السابقة"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((c) => Math.max(c - 1, 1))}
                   className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-slate-500 transition-all focus:outline-none"
@@ -271,6 +277,8 @@ export const Members: React.FC = () => {
                 ))}
 
                 <button
+                  id="next-page"
+                  aria-label="الصفحة التالية"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((c) => Math.min(c + 1, totalPages))}
                   className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-slate-500 transition-all focus:outline-none"

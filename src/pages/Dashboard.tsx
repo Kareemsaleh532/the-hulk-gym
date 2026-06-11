@@ -148,23 +148,12 @@ export const Dashboard: React.FC = () => {
             </h3>
             
             <div className="space-y-4">
-              {/* Custom segmented progress bar */}
+              {/* Custom segmented progress bar (widths injected via component stylesheet) */}
+              <style>{`.seg-active{width:${activePercent}%;}.seg-expiring{width:${expiringPercent}%;}.seg-expired{width:${expiredPercent}%;}`}</style>
               <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden flex">
-                <div
-                  style={{ width: `${activePercent}%` }}
-                  className="bg-emerald-500 h-full transition-all duration-500"
-                  title={`نشط: ${activePercent}%`}
-                />
-                <div
-                  style={{ width: `${expiringPercent}%` }}
-                  className="bg-amber-400 h-full transition-all duration-500"
-                  title={`قارب الانتهاء: ${expiringPercent}%`}
-                />
-                <div
-                  style={{ width: `${expiredPercent}%` }}
-                  className="bg-rose-500 h-full transition-all duration-500"
-                  title={`منتهي: ${expiredPercent}%`}
-                />
+                <div className="seg-active bg-emerald-500 h-full transition-all duration-500" title={`نشط: ${activePercent}%`} />
+                <div className="seg-expiring bg-amber-400 h-full transition-all duration-500" title={`قارب الانتهاء: ${expiringPercent}%`} />
+                <div className="seg-expired bg-rose-500 h-full transition-all duration-500" title={`منتهي: ${expiredPercent}%`} />
               </div>
 
               {/* Legend with percentages */}

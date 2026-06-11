@@ -55,9 +55,10 @@ export const AddMember: React.FC = () => {
       addToast('success', `تم إضافة العضو ${name} بنجاح!`);
       // Navigate back to members tab
       setTab('members');
-    } catch (err) {
-      addToast('error', 'حدث خطأ أثناء حفظ العضو');
-    }
+  } catch (err) {
+  console.error('Create member error:', err);
+  addToast('error', err instanceof Error ? err.message : 'حدث خطأ أثناء حفظ العضو');
+}
   };
 
   return (
@@ -84,10 +85,12 @@ export const AddMember: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Full Name */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                <label htmlFor="full-name" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
                   الاسم الكامل <span className="text-rose-500">*</span>
                 </label>
                 <input
+                  id="full-name"
+                  aria-label="الاسم الكامل"
                   type="text"
                   required
                   placeholder="مثال: أحمد محمد"
@@ -99,10 +102,12 @@ export const AddMember: React.FC = () => {
 
               {/* Phone Number */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                <label htmlFor="phone" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
                   رقم الهاتف
                 </label>
                 <input
+                  id="phone"
+                  aria-label="رقم الهاتف"
                   type="tel"
                   placeholder="+966 5XX XXX XXXX"
                   value={phone}
@@ -136,10 +141,12 @@ export const AddMember: React.FC = () => {
 
               {/* Date of Birth */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                <label htmlFor="dob" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
                   تاريخ الميلاد
                 </label>
                 <input
+                  id="dob"
+                  aria-label="تاريخ الميلاد"
                   type="date"
                   required
                   value={dob}
@@ -159,10 +166,12 @@ export const AddMember: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Plan Select */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                <label htmlFor="plan-id" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
                   خطة العضوية
                 </label>
                 <select
+                  id="plan-id"
+                  aria-label="خطة العضوية"
                   value={planId}
                   onChange={(e) => setPlanId(e.target.value)}
                   className="block w-full px-3 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-250 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
@@ -177,10 +186,12 @@ export const AddMember: React.FC = () => {
 
               {/* Start Date */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                <label htmlFor="start-date" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
                   تاريخ البدء
                 </label>
                 <input
+                  id="start-date"
+                  aria-label="تاريخ البدء"
                   type="date"
                   required
                   value={startDate}
@@ -200,10 +211,12 @@ export const AddMember: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Payment Method */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                <label htmlFor="payment-method" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
                   طريقة الدفع
                 </label>
                 <select
+                  id="payment-method"
+                  aria-label="طريقة الدفع"
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value as Payment['method'])}
                   className="block w-full px-3 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-250 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
@@ -217,10 +230,12 @@ export const AddMember: React.FC = () => {
 
               {/* Payment Status */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                <label htmlFor="payment-status" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
                   حالة الدفع
                 </label>
                 <select
+                  id="payment-status"
+                  aria-label="حالة الدفع"
                   value={paymentStatus}
                   onChange={(e) => setPaymentStatus(e.target.value as Payment['status'])}
                   className="block w-full px-3 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-250 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
@@ -235,10 +250,12 @@ export const AddMember: React.FC = () => {
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+            <label htmlFor="notes" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
               ملاحظات الموظفين / المتطلبات البدنية
             </label>
             <textarea
+              id="notes"
+              aria-label="ملاحظات الموظفين"
               rows={3}
               placeholder="أضف تعيينات المدرب الشخصي، القيود البدنية، أو جداول الفوترة..."
               value={notes}

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import type { Admin, TabType, LogEntry, Plan, Coach } from '../types';
 import { INITIAL_COACHES, INITIAL_PLANS, INITIAL_LOGS } from '../mockData';
 
@@ -17,8 +18,8 @@ interface GymContextType {
   currentMemberId: string | null;
   toasts: Toast[];
   theme: 'light' | 'dark';
-  login: (email: string, password: string) => boolean;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
   addToast: (type: Toast['type'], message: string) => void;
   removeToast: (id: string) => void;
   setTab: (tab: TabType, memberId?: string | null) => void;
@@ -112,31 +113,113 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Auth Operations
-  const login = (email: string, password: string): boolean => {
-    if (email === 'admin@hulkgym.com' && password === 'admin') {
-      const user: Admin = {
-        id: 'admin-1',
-        name: 'جون هلكرسون',
-        email: 'admin@hulkgym.com',
-        role: 'admin',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      };
-      setCurrentAdmin(user);
-      setActiveTab('dashboard');
-      addToast('success', 'تم تسجيل الدخول بنجاح باسم جون هلكرسون!');
-      addLog('settings_update', 'تم تسجيل دخول المسؤول إلى بوابة الموظفين');
-      return true;
-    }
-    addToast('error', 'البريد الإلكتروني أو كلمة المرور غير صالحة. تلميح: admin@hulkgym.com / admin');
-    return false;
+  // Helper to fetch the staff profile linked to an auth.user id
+  const fetchStaffProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('staff_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !data) return null;
+    return data as { user_id: string; name: string; email: string; role: string };
   };
 
-  const logout = () => {
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !data?.user) {
+        addToast('error', 'البريد الإلكتروني أو كلمة المرور غير صالحة.');
+        return false;
+      }
+
+      const user = data.user;
+      const profile = await fetchStaffProfile(user.id);
+      if (!profile) {
+        // Not a staff user
+        await supabase.auth.signOut();
+        addToast('error', 'ليس لديك صلاحية دخول إلى لوحة الموظفين. تواصل مع المسؤول.');
+        return false;
+      }
+
+      const admin: Admin = {
+        id: profile.user_id,
+        name: profile.name,
+        email: profile.email,
+        role: profile.role as any,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=22c55e&color=fff`
+      };
+
+      setCurrentAdmin(admin);
+      setActiveTab('dashboard');
+      addToast('success', `تم تسجيل الدخول باسم ${admin.name}`);
+      addLog('settings_update', 'تم تسجيل دخول المسؤول إلى بوابة الموظفين');
+      return true;
+    } catch (err) {
+      addToast('error', 'فشل الاتصال بخدمة المصادقة.');
+      return false;
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setCurrentAdmin(null);
     setActiveTab('login');
     setCurrentMemberId(null);
     addToast('info', 'تم تسجيل الخروج من نظام إدارة النادي.');
   };
+
+  // Initialize auth session and listen to auth state changes
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const profile = await fetchStaffProfile(session.user.id);
+          if (profile && mounted) {
+            setCurrentAdmin({
+              id: profile.user_id,
+              name: profile.name,
+              email: profile.email,
+              role: profile.role as any,
+              avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=22c55e&color=fff`
+            });
+            setActiveTab('dashboard');
+          } else if (mounted) {
+            setActiveTab('login');
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const profile = await fetchStaffProfile(session.user.id);
+        if (profile && mounted) {
+          setCurrentAdmin({
+            id: profile.user_id,
+            name: profile.name,
+            email: profile.email,
+            role: profile.role as any,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=22c55e&color=fff`
+          });
+          setActiveTab('dashboard');
+        }
+      } else if (mounted) {
+        setCurrentAdmin(null);
+        setActiveTab('login');
+      }
+    });
+
+    return () => {
+      mounted = false;
+      authListener?.subscription?.unsubscribe?.();
+    };
+  }, []);
 
   // Navigation Helper
   const setTab = (tab: TabType, memberId: string | null = null) => {

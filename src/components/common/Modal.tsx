@@ -52,6 +52,8 @@ export const Modal: React.FC<ModalProps> = ({
           <h3 className="text-lg font-bold text-slate-800">{title}</h3>
           <button
             onClick={onClose}
+            aria-label="إغلاق"
+            title="إغلاق"
             className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none"
           >
             <X className="h-5 w-5" />

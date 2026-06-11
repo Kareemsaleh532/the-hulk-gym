@@ -275,7 +275,7 @@ export const MemberDetails: React.FC = () => {
               </div>
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100/50">
                 <span className="block text-slate-400 uppercase tracking-wider text-[10px]">تكلفة الاشتراك</span>
-                <span className="block text-sm font-black text-slate-800 mt-1.5">{activePlan?.price || '0.00'} دولار</span>
+                <span className="block text-sm font-black text-slate-800 mt-1.5">{activePlan?.price || '0.00'} شيكل</span>
               </div>
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100/50">
                 <span className="block text-slate-400 uppercase tracking-wider text-[10px]">تاريخ البدء</span>
@@ -320,7 +320,7 @@ export const MemberDetails: React.FC = () => {
                         <td className="px-6 py-3.5 font-bold text-slate-800">{p.id}</td>
                         <td className="px-6 py-3.5">{p.date}</td>
                         <td className="px-6 py-3.5">{translateMethod(p.method)}</td>
-                        <td className="px-6 py-3.5 font-bold text-slate-850">{p.amount.toFixed(2)} دولار</td>
+                        <td className="px-6 py-3.5 font-bold text-slate-850">{p.amount.toFixed(2)} شيكل</td>
                         <td className="px-6 py-3.5">
                           <Badge type={p.status} />
                         </td>
@@ -365,27 +365,31 @@ export const MemberDetails: React.FC = () => {
       >
         <form onSubmit={handleRenewSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="renew-plan" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
               اختر برنامج الاشتراك
             </label>
             <select
+              id="renew-plan"
+              aria-label="اختر برنامج الاشتراك"
               value={renewPlanId}
               onChange={(e) => setRenewPlanId(e.target.value)}
               className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
             >
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} ({p.price} دولار / {p.durationMonths} أشهر)
+                  {p.name} ({p.price} شيكل / {p.durationMonths} أشهر)
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="renew-start-date" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
               تاريخ بدء التجديد
             </label>
             <input
+              id="renew-start-date"
+              aria-label="تاريخ بدء التجديد"
               type="date"
               required
               value={renewStartDate}
@@ -399,10 +403,12 @@ export const MemberDetails: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+              <label htmlFor="renew-pay-method" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
                 طريقة الدفع
               </label>
               <select
+                id="renew-pay-method"
+                aria-label="طريقة الدفع"
                 value={renewPayMethod}
                 onChange={(e) => setRenewPayMethod(e.target.value as any)}
                 className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
@@ -415,10 +421,12 @@ export const MemberDetails: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+              <label htmlFor="renew-pay-status" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
                 حالة الدفع
               </label>
               <select
+                id="renew-pay-status"
+                aria-label="حالة الدفع"
                 value={renewPayStatus}
                 onChange={(e) => setRenewPayStatus(e.target.value as any)}
                 className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
@@ -458,10 +466,12 @@ export const MemberDetails: React.FC = () => {
       >
         <form onSubmit={handlePaymentSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
-              قيمة الفاتورة (دولار)
+            <label htmlFor="pay-amount" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+              قيمة الفاتورة (شيكل)
             </label>
             <input
+              id="pay-amount"
+              aria-label="قيمة الفاتورة"
               type="number"
               step="0.01"
               required
@@ -473,10 +483,12 @@ export const MemberDetails: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="pay-method" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
               طريقة الدفع
             </label>
             <select
+              id="pay-method"
+              aria-label="طريقة الدفع"
               value={payMethod}
               onChange={(e) => setPayMethod(e.target.value as any)}
               className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"

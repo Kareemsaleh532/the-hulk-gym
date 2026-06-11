@@ -28,6 +28,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         <button
           onClick={onMenuClick}
           className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none lg:hidden transition-colors border border-slate-200 dark:border-slate-700"
+          title="قائمة التنقل"
+          aria-label="قائمة التنقل"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -55,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </button>
 
         {/* Notifications mock button */}
-        <button className="relative p-2 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors border border-slate-100 dark:border-slate-800 focus:outline-none">
+        <button title="الإشعارات" aria-label="الإشعارات" className="relative p-2 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors border border-slate-100 dark:border-slate-800 focus:outline-none">
           <Bell className="h-4.5 w-4.5" />
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />
         </button>

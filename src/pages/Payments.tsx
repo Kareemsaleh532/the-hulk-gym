@@ -134,6 +134,8 @@ export const Payments: React.FC = () => {
           {/* Status Filter */}
           <div className="relative flex-1 sm:flex-none">
             <select
+              id="payments-status-filter"
+              aria-label="تصفية الحالة"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="block w-full sm:w-44 pl-3 pr-8 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer appearance-none"
@@ -151,6 +153,8 @@ export const Payments: React.FC = () => {
           {/* Date Filter */}
           <div className="relative flex-1 sm:flex-none">
             <select
+              id="payments-date-filter"
+              aria-label="تصفية التاريخ"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
               className="block w-full sm:w-44 pl-3 pr-8 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer appearance-none"
@@ -240,10 +244,12 @@ export const Payments: React.FC = () => {
       >
         <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="new-pay-member" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
               اختر عضو النادي
             </label>
             <select
+              id="new-pay-member"
+              aria-label="اختر عضو النادي"
               value={newPayMemberId}
               onChange={(e) => setNewPayMemberId(e.target.value)}
               className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
@@ -257,10 +263,12 @@ export const Payments: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="new-pay-amount" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
               مبلغ الفاتورة ($)
             </label>
             <input
+              id="new-pay-amount"
+              aria-label="مبلغ الفاتورة"
               type="number"
               step="0.01"
               required
@@ -272,10 +280,12 @@ export const Payments: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
+            <label htmlFor="new-pay-method" className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">
               طريقة الدفع
             </label>
             <select
+              id="new-pay-method"
+              aria-label="طريقة الدفع"
               value={newPayMethod}
               onChange={(e) => setNewPayMethod(e.target.value as any)}
               className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"

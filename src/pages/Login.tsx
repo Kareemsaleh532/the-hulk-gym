@@ -5,19 +5,19 @@ import { Lock, Eye, EyeOff } from 'lucide-react';
 export const Login: React.FC = () => {
   const { login } = useGym();
   const [password, setPassword] = useState('admin');
+  const [email, setEmail] = useState('admin@hulkgym.com');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Using a placeholder email as login mock
-    const placeholderEmail = 'admin@hulkgym.com';
-    setTimeout(() => {
-      login(placeholderEmail, password);
+    try {
+      await login(email.trim(), password);
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (
@@ -50,6 +50,18 @@ export const Login: React.FC = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Email */}
+          <div>
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">البريد الإلكتروني</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="block w-full pr-10 pl-3 py-3 rounded-xl bg-gray-200 dark:bg-slate-800/60 border border-gray-300 dark:border-slate-700/80 text-slate-900 dark:text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium"
+              placeholder="admin@hulkgym.com"
+            />
+          </div>
           {/* Password */}
           <div>
             <div className="flex items-center justify-between mb-2">
