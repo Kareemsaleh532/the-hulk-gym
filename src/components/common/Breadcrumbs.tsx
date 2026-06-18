@@ -43,6 +43,15 @@ export const Breadcrumbs: React.FC = () => {
       case 'settings':
         crumbs.push({ label: 'الإعدادات', action: () => {} });
         break;
+      case 'admin':
+        crumbs.push({ label: 'لوحة التحكم للمسؤول', action: () => {} });
+        break;
+      case 'accounting':
+        crumbs.push({ label: 'الحسابات والماليات', action: () => {} });
+        break;
+      case 'notifications':
+        crumbs.push({ label: 'التنبيهات والإشعارات', action: () => {} });
+        break;
       default:
         crumbs.push({ label: 'النظام', action: () => {} });
     }

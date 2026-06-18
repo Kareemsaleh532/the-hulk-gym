@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useGym } from '../context/GymContext';
 import { useMembers } from '../hooks/useMembers';
 import { useRenewMembership } from '../hooks/useMemberships';
 import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { EmptyState } from '../components/common/EmptyState';
-import { Award, RefreshCw, Eye, CheckCircle, Clock, AlertTriangle, Loader2 } from 'lucide-react';
+import { ResponsiveTable } from '../components/common/ResponsiveTable';
+import type { TableColumn } from '../components/common/ResponsiveTable';
+import { getInitials, getPlanName } from '../utils/helpers';
+import { Award, RefreshCw, Eye, CheckCircle, Clock, AlertTriangle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type SubTabType = 'active' | 'expired' | 'expiring';
 
 export const Memberships: React.FC = () => {
   const { plans, setTab, addToast } = useGym();
-  const { members } = useMembers();
+  const { members, loading: membersLoading } = useMembers();
   const { renewMembership, loading: renewing } = useRenewMembership();
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>('active');
 
@@ -23,13 +26,27 @@ export const Memberships: React.FC = () => {
     return new Date().toISOString().split('T')[0];
   });
 
-  // Filter members based on active sub tab
-  const tabMembers = members.filter((m) => m.status === activeSubTab);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
-  const getPlanName = (planId: string) => {
-    const plan = plans.find((p) => p.id === planId);
-    return plan ? plan.name : 'باقة غير معروفة';
-  };
+  // Reset pagination on sub tab change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeSubTab]);
+
+  // Filter members based on active sub tab
+  const tabMembers = useMemo(() => {
+    return members.filter((m) => m.status === activeSubTab);
+  }, [members, activeSubTab]);
+
+  // Pagination calculations
+  const totalItems = tabMembers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const paginatedMembers = useMemo(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    return tabMembers.slice(startIdx, startIdx + itemsPerPage);
+  }, [tabMembers, currentPage]);
 
   const getActiveCount = (planId: string) => {
     return members.filter((m) => m.planId === planId && m.status === 'active').length;
@@ -64,6 +81,132 @@ export const Memberships: React.FC = () => {
     if (months === 6) return '٦ أشهر';
     if (months === 12) return 'سنة كاملة (١٢ شهرًا)';
     return `${months} أشهر`;
+  };
+
+  const columns = useMemo<TableColumn<any>[]>(() => [
+    {
+      key: 'name',
+      header: 'اسم العضو',
+      render: (member) => {
+        const initials = getInitials(member.name);
+        return (
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-[10px] select-none">
+              {initials}
+            </div>
+            <div>
+              <span className="block font-bold text-slate-800 dark:text-slate-250 text-right">{member.name}</span>
+              <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 text-right">{member.phone}</span>
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'planId',
+      header: 'برنامج الاشتراك',
+      render: (member) => (
+        <span className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">
+          {getPlanName(member.planId, plans)}
+        </span>
+      )
+    },
+    {
+      key: 'startDate',
+      header: 'تاريخ البدء',
+      render: (member) => (
+        <span className="text-slate-500 dark:text-slate-400 font-semibold">{member.startDate}</span>
+      )
+    },
+    {
+      key: 'endDate',
+      header: 'تاريخ الانتهاء',
+      render: (member) => (
+        <span className="text-slate-500 dark:text-slate-400 font-semibold">{member.endDate}</span>
+      )
+    },
+    {
+      key: 'status',
+      header: 'الحالة',
+      render: (member) => <Badge type={member.status} />
+    },
+    {
+      key: 'actions',
+      header: 'الإجراءات',
+      align: 'left',
+      render: (member) => (
+        <div className="inline-flex gap-2">
+          <button
+            onClick={() => setTab('member-details', member.id)}
+            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-100 dark:hover:border-indigo-800 transition-all focus:outline-none cursor-pointer"
+            title="عرض التفاصيل"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => openRenewModal(member.id, member.planId)}
+            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-emerald-655 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-100 dark:hover:border-emerald-800 transition-all focus:outline-none cursor-pointer"
+            title="تجديد الاشتراك"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        </div>
+      )
+    }
+  ], [plans, setTab]);
+
+  const renderMobileCard = (member: any) => {
+    const initials = getInitials(member.name);
+    return (
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 p-5 rounded-2xl shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-605 dark:text-slate-400 flex items-center justify-center font-bold text-xs select-none">
+              {initials}
+            </div>
+            <div>
+              <span className="block font-bold text-slate-850 dark:text-slate-100 text-right">{member.name}</span>
+              <span className="block text-[10px] text-slate-405 dark:text-slate-500 mt-0.5 text-right">{member.phone}</span>
+            </div>
+          </div>
+          <Badge type={member.status} />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-50 dark:border-slate-800 text-xs">
+          <div>
+            <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1 text-right">الخطة</span>
+            <span className="font-semibold text-slate-850 dark:text-slate-205 block text-right">
+              {getPlanName(member.planId, plans)}
+            </span>
+          </div>
+          <div>
+            <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1 text-right">البدء</span>
+            <span className="font-semibold text-slate-850 dark:text-slate-205 block text-right">{member.startDate}</span>
+          </div>
+          <div>
+            <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1 text-right">الانتهاء</span>
+            <span className="font-semibold text-slate-850 dark:text-slate-205 block text-right">{member.endDate}</span>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setTab('member-details', member.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-605 dark:text-slate-305 text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-650 dark:hover:text-indigo-400 transition-all cursor-pointer"
+          >
+            <Eye className="h-4 w-4" />
+            <span>التفاصيل</span>
+          </button>
+          <button
+            onClick={() => openRenewModal(member.id, member.planId)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-605 dark:text-slate-305 text-xs font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-650 dark:hover:text-emerald-400 transition-all cursor-pointer"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>تجديد</span>
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -179,81 +322,70 @@ export const Memberships: React.FC = () => {
         </div>
 
         {/* Tab Contents */}
-        {tabMembers.length === 0 ? (
-          <EmptyState
-            title={`لا يوجد أعضاء ${activeSubTab === 'active' ? 'نشطون' : activeSubTab === 'expiring' ? 'تنتهي صلاحيتهم قريبًا' : 'منتهية صلاحيتهم'}`}
-            description={`لا يوجد حاليًا أي أعضاء في النادي يندرجون تحت تصنيف ${activeSubTab === 'active' ? 'النشطين' : activeSubTab === 'expiring' ? 'الذين يوشك اشتراكهم على الانتهاء' : 'منتهيي الصلاحية'}.`}
+        <div className="p-4">
+          <ResponsiveTable
+            columns={columns}
+            data={paginatedMembers}
+            isLoading={membersLoading}
+            renderMobileCard={renderMobileCard}
+            rowKey={(member) => member.id}
+            emptyState={
+              <EmptyState
+                title={`لا يوجد أعضاء ${activeSubTab === 'active' ? 'نشطون' : activeSubTab === 'expiring' ? 'تنتهي صلاحيتهم قريبًا' : 'منتهية صلاحيتهم'}`}
+                description={`لا يوجد حاليًا أي أعضاء في النادي يندرجون تحت تصنيف ${activeSubTab === 'active' ? 'النشطين' : activeSubTab === 'expiring' ? 'الذين يوشك اشتراكهم على الانتهاء' : 'منتهيي الصلاحية'}.`}
+              />
+            }
           />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse">
-              <thead>
-                <tr className="bg-slate-50/30 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[9px] font-extrabold uppercase tracking-wider">
-                  <th className="px-6 py-3">ملف العميل</th>
-                  <th className="px-6 py-3">البرنامج المسجل</th>
-                  <th className="px-6 py-3">تاريخ البدء</th>
-                  <th className="px-6 py-3">تاريخ الانتهاء</th>
-                  <th className="px-6 py-3">الحالة</th>
-                  <th className="px-6 py-3 text-left">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                {tabMembers.map((member) => {
-                  const initials = member.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .toUpperCase()
-                    .slice(0, 2);
 
-                  return (
-                    <tr key={member.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-[10px]">
-                            {initials}
-                          </div>
-                          <div>
-                            <span className="block font-bold text-slate-800 dark:text-slate-200">{member.name}</span>
-                            <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{member.phone}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-3.5">
-                        <span className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2 py-0.5 rounded text-[10px]">
-                          {getPlanName(member.planId)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3.5 text-slate-500 dark:text-slate-400 font-semibold">{member.startDate}</td>
-                      <td className="px-6 py-3.5 text-slate-500 dark:text-slate-400 font-semibold">{member.endDate}</td>
-                      <td className="px-6 py-3.5">
-                        <Badge type={member.status} />
-                      </td>
-                      <td className="px-6 py-3.5 text-left">
-                        <div className="inline-flex gap-2">
-                          <button
-                            onClick={() => setTab('member-details', member.id)}
-                            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-100 dark:hover:border-indigo-800 transition-all focus:outline-none cursor-pointer"
-                            title="عرض التفاصيل"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => openRenewModal(member.id, member.planId)}
-                            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-100 dark:hover:border-emerald-800 transition-all focus:outline-none cursor-pointer"
-                            title="تجديد الاشتراك"
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+          {!membersLoading && totalItems > 0 && (
+            /* Pagination Controls */
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30 mt-4">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                عرض <span className="font-bold text-slate-800 dark:text-slate-205">{(currentPage - 1) * itemsPerPage + 1}</span> إلى{' '}
+                <span className="font-bold text-slate-800 dark:text-slate-205">
+                  {Math.min(currentPage * itemsPerPage, totalItems)}
+                </span>{' '}
+                من <span className="font-bold text-slate-800 dark:text-slate-205">{totalItems}</span> عضو
+              </span>
+
+              <div className="inline-flex gap-1.5">
+                <button
+                  id="prev-page"
+                  aria-label="الصفحة السابقة"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((c) => Math.max(c - 1, 1))}
+                  className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 disabled:hover:text-slate-500 transition-all focus:outline-none cursor-pointer"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 rounded-lg border text-xs font-bold transition-all focus:outline-none cursor-pointer ${
+                      currentPage === page
+                        ? 'bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:border-slate-100 dark:text-slate-900 shadow-xs'
+                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-205'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  id="next-page"
+                  aria-label="الصفحة التالية"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((c) => Math.min(c + 1, totalPages))}
+                  className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 disabled:hover:text-slate-500 transition-all focus:outline-none cursor-pointer"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Renew Modal */}

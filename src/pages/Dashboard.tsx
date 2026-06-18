@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useGym } from '../context/GymContext';
 import { useMembers } from '../hooks/useMembers';
 import { usePayments } from '../hooks/usePayments';
+import { formatCurrency } from '../utils/helpers';
 import {
   Users,
   UserCheck,
@@ -20,25 +21,36 @@ export const Dashboard: React.FC = () => {
   const { members } = useMembers();
   const { payments } = usePayments();
 
-  // Stats calculations
-  const totalMembers = members.length;
-  const activeMemberships = members.filter((m) => m.status === 'active').length;
-  const expiringMemberships = members.filter((m) => m.status === 'expiring').length;
-  const expiredMemberships = members.filter((m) => m.status === 'expired').length;
+  // Get current year-month and Arabic name of the current month
+  const currentMonthName = useMemo(() => {
+    return new Date().toLocaleDateString('ar-EG', { month: 'long' });
+  }, []);
 
-  // Monthly revenue (sum of paid payments in June 2026)
-  const june2026PaidRevenue = payments
-    .filter((p) => p.status === 'paid' && p.date.startsWith('2026-06'))
-    .reduce((sum, p) => sum + p.amount, 0);
+  const currentYearMonth = useMemo(() => {
+    return new Date().toISOString().slice(0, 7);
+  }, []);
 
-  const stats = [
+  // Stats calculations memoized
+  const totalMembers = useMemo(() => members.length, [members]);
+  const activeMemberships = useMemo(() => members.filter((m) => m.status === 'active').length, [members]);
+  const expiringMemberships = useMemo(() => members.filter((m) => m.status === 'expiring').length, [members]);
+  const expiredMemberships = useMemo(() => members.filter((m) => m.status === 'expired').length, [members]);
+
+  // Monthly revenue memoized (sum of paid payments in current month)
+  const currentMonthRevenue = useMemo(() => {
+    return payments
+      .filter((p) => p.status === 'paid' && p.date.startsWith(currentYearMonth))
+      .reduce((sum, p) => sum + p.amount, 0);
+  }, [payments, currentYearMonth]);
+
+  const stats = useMemo(() => [
     {
       label: 'إجمالي الأعضاء',
       value: totalMembers,
       change: '+٤٪ هذا الشهر',
       isPositive: true,
       icon: Users,
-      color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+      color: 'text-indigo-600 bg-indigo-50 border-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-900/30',
     },
     {
       label: 'العضويات النشطة',
@@ -46,7 +58,7 @@ export const Dashboard: React.FC = () => {
       change: `${Math.round((activeMemberships / (totalMembers || 1)) * 100)}٪ من الإجمالي`,
       isPositive: true,
       icon: UserCheck,
-      color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+      color: 'text-emerald-600 bg-emerald-50 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30',
     },
     {
       label: 'قاربت الانتهاء',
@@ -54,22 +66,22 @@ export const Dashboard: React.FC = () => {
       change: 'يتطلب تجديد',
       isPositive: false,
       icon: AlertTriangle,
-      color: 'text-amber-600 bg-amber-50 border-amber-100',
+      color: 'text-amber-600 bg-amber-50 border-amber-100 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30',
     },
     {
-      label: 'إيرادات يونيو',
-      value: `$${june2026PaidRevenue.toFixed(2)}`,
+      label: `إيرادات ${currentMonthName}`,
+      value: `$${formatCurrency(currentMonthRevenue, 2)}`,
       change: 'الهدف: $١,٥٠٠.٠٠',
       isPositive: true,
       icon: DollarSign,
-      color: 'text-rose-600 bg-rose-50 border-rose-100',
+      color: 'text-rose-600 bg-rose-50 border-rose-100 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30',
     },
-  ];
+  ], [totalMembers, activeMemberships, expiringMemberships, currentMonthRevenue, currentMonthName]);
 
-  // Membership status calculations for visual bar
-  const activePercent = Math.round((activeMemberships / (totalMembers || 1)) * 100);
-  const expiringPercent = Math.round((expiringMemberships / (totalMembers || 1)) * 100);
-  const expiredPercent = Math.round((expiredMemberships / (totalMembers || 1)) * 100);
+  // Membership status percentages memoized for visual bar
+  const activePercent = useMemo(() => Math.round((activeMemberships / (totalMembers || 1)) * 100), [activeMemberships, totalMembers]);
+  const expiringPercent = useMemo(() => Math.round((expiringMemberships / (totalMembers || 1)) * 100), [expiringMemberships, totalMembers]);
+  const expiredPercent = useMemo(() => Math.round((expiredMemberships / (totalMembers || 1)) * 100), [expiredMemberships, totalMembers]);
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
@@ -148,12 +160,10 @@ export const Dashboard: React.FC = () => {
             </h3>
             
             <div className="space-y-4">
-              {/* Custom segmented progress bar (widths injected via component stylesheet) */}
-              <style>{`.seg-active{width:${activePercent}%;}.seg-expiring{width:${expiringPercent}%;}.seg-expired{width:${expiredPercent}%;}`}</style>
               <div className="h-4 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
-                <div className="seg-active bg-emerald-500 h-full transition-all duration-500" title={`نشط: ${activePercent}%`} />
-                <div className="seg-expiring bg-amber-400 h-full transition-all duration-500" title={`قارب الانتهاء: ${expiringPercent}%`} />
-                <div className="seg-expired bg-rose-500 h-full transition-all duration-500" title={`منتهي: ${expiredPercent}%`} />
+                <div style={{ width: `${activePercent}%` }} className="bg-emerald-500 h-full transition-all duration-500" title={`نشط: ${activePercent}%`} />
+                <div style={{ width: `${expiringPercent}%` }} className="bg-amber-400 h-full transition-all duration-500" title={`قارب الانتهاء: ${expiringPercent}%`} />
+                <div style={{ width: `${expiredPercent}%` }} className="bg-rose-500 h-full transition-all duration-500" title={`منتهي: ${expiredPercent}%`} />
               </div>
 
               {/* Legend with percentages */}
@@ -215,7 +225,7 @@ export const Dashboard: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setTab('settings')}
+                onClick={() => setTab('accounting')}
                 className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-800 hover:bg-rose-50/10 dark:hover:bg-rose-950/20 text-center transition-all group cursor-pointer"
               >
                 <div className="w-10 h-10 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-500 flex items-center justify-center mb-2 group-hover:scale-105 transition-all">

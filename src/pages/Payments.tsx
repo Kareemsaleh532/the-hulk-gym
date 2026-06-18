@@ -1,11 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useGym } from '../context/GymContext';
 import { usePayments, useCreatePayment, useUpdatePaymentStatus, useDeletePayment } from '../hooks/usePayments';
 import { useMembers } from '../hooks/useMembers';
 import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
+import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { EmptyState } from '../components/common/EmptyState';
-import { Search, Filter, Plus, Eye, CreditCard, Loader2, Trash2, CheckCircle } from 'lucide-react';
+import { ResponsiveTable } from '../components/common/ResponsiveTable';
+import type { TableColumn } from '../components/common/ResponsiveTable';
+import { formatCurrency, translateMethod } from '../utils/helpers';
+import { Search, Filter, Plus, Eye, CreditCard, Loader2, Trash2, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const Payments: React.FC = () => {
   const { setTab, addToast } = useGym();
@@ -20,16 +24,28 @@ export const Payments: React.FC = () => {
     addToast('success', 'تم تحديث حالة الدفعة إلى "مدفوع"');
   };
 
-  const handleDeletePayment = async (id: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذه الدفعة؟ لا يمكن التراجع عن هذا الإجراء.')) return;
-    await deletePayment(id);
-    addToast('success', 'تم حذف سجل الدفعة بنجاح');
+  // Confirm dialog state
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const handleDeletePayment = (id: string) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDeletePayment = async () => {
+    if (pendingDeleteId) {
+      await deletePayment(pendingDeleteId);
+      addToast('success', 'تم حذف سجل الدفعة بنجاح');
+    }
   };
 
   // Search & Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   // Modal state
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
@@ -39,6 +55,11 @@ export const Payments: React.FC = () => {
   const [newPayAmount, setNewPayAmount] = useState('');
   const [newPayMethod, setNewPayMethod] = useState<'Cash' | 'Credit Card' | 'Bank Transfer' | 'Mobile Payment'>('Credit Card');
   const [newPayStatus, setNewPayStatus] = useState<'paid' | 'pending'>('paid');
+
+  // Reset pagination on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, dateFilter]);
 
   // Filter payments
   const filteredPayments = useMemo(() => {
@@ -61,6 +82,14 @@ export const Payments: React.FC = () => {
       return matchesSearch && matchesStatus && matchesDate;
     });
   }, [payments, searchTerm, statusFilter, dateFilter]);
+
+  // Pagination calculations
+  const totalItems = filteredPayments.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const paginatedPayments = useMemo(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    return filteredPayments.slice(startIdx, startIdx + itemsPerPage);
+  }, [filteredPayments, currentPage]);
 
   const handleAddPaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,11 +121,150 @@ export const Payments: React.FC = () => {
     }
   };
 
-  const methodLabels: Record<string, string> = {
-    'Credit Card': 'بطاقة ائتمان',
-    'Cash': 'نقداً',
-    'Bank Transfer': 'تحويل بنكي',
-    'Mobile Payment': 'دفع إلكتروني',
+  const columns = useMemo<TableColumn<any>[]>(() => [
+    {
+      key: 'id',
+      header: 'رقم الإيصال',
+      render: (pay) => (
+        <span className="font-bold text-slate-800 dark:text-slate-205 text-xs">
+          {pay.id}
+        </span>
+      )
+    },
+    {
+      key: 'memberName',
+      header: 'اسم العضو',
+      render: (pay) => (
+        <span className="font-bold text-slate-850 dark:text-slate-100">
+          {pay.memberName}
+        </span>
+      )
+    },
+    {
+      key: 'date',
+      header: 'تاريخ المعاملة',
+      render: (pay) => (
+        <span className="text-slate-500 dark:text-slate-400 font-semibold text-xs">
+          {pay.date}
+        </span>
+      )
+    },
+    {
+      key: 'amount',
+      header: 'المبلغ',
+      render: (pay) => (
+        <span className="font-black text-slate-800 dark:text-slate-105">
+          ${formatCurrency(pay.amount, 2)}
+        </span>
+      )
+    },
+    {
+      key: 'method',
+      header: 'طريقة الدفع',
+      render: (pay) => (
+        <span className="text-slate-500 dark:text-slate-400 font-semibold text-xs">
+          {translateMethod(pay.method)}
+        </span>
+      )
+    },
+    {
+      key: 'status',
+      header: 'الحالة',
+      render: (pay) => <Badge type={pay.status} />
+    },
+    {
+      key: 'actions',
+      header: 'الإجراءات',
+      align: 'left',
+      render: (pay) => (
+        <div className="inline-flex items-center gap-1.5">
+          <button
+            onClick={() => setTab('member-details', pay.memberId)}
+            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-450 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-100 dark:hover:border-indigo-800 transition-all focus:outline-none cursor-pointer"
+            title="عرض ملف العضو"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          {pay.status === 'pending' && (
+            <button
+              onClick={() => handleMarkPaid(pay.id)}
+              className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-450 hover:text-emerald-655 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-100 dark:hover:border-emerald-800 transition-all focus:outline-none cursor-pointer"
+              title="تحديد كمدفوع"
+            >
+              <CheckCircle className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            onClick={() => handleDeletePayment(pay.id)}
+            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-455 hover:text-rose-650 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:border-rose-100 dark:hover:border-rose-800 transition-all focus:outline-none cursor-pointer"
+            title="حذف الدفعة"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )
+    }
+  ], [setTab]);
+
+  const renderMobileCard = (pay: any) => {
+    return (
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 p-5 rounded-2xl shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="min-w-0">
+            <span className="block font-bold text-slate-850 dark:text-slate-100 truncate text-right">
+              {pay.memberName}
+            </span>
+            <span className="block text-[10px] text-slate-450 dark:text-slate-500 font-semibold mt-0.5 text-right">
+              رقم الإيصال: {pay.id}
+            </span>
+          </div>
+          <Badge type={pay.status} />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-50 dark:border-slate-800 text-xs">
+          <div>
+            <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1 text-right">المبلغ</span>
+            <span className="font-black text-slate-800 dark:text-slate-105 block text-right">${formatCurrency(pay.amount, 2)}</span>
+          </div>
+          <div>
+            <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1 text-right">طريقة الدفع</span>
+            <span className="font-semibold text-slate-850 dark:text-slate-205 block text-right">
+              {translateMethod(pay.method)}
+            </span>
+          </div>
+          <div>
+            <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1 text-right">التاريخ</span>
+            <span className="font-semibold text-slate-850 dark:text-slate-205 block text-right">{pay.date}</span>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setTab('member-details', pay.memberId)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-605 dark:text-slate-305 text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-650 dark:hover:text-indigo-400 transition-all cursor-pointer"
+          >
+            <Eye className="h-4 w-4" />
+            <span>ملف العضو</span>
+          </button>
+          {pay.status === 'pending' && (
+            <button
+              onClick={() => handleMarkPaid(pay.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-605 dark:text-slate-305 text-xs font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-650 dark:hover:text-emerald-400 transition-all cursor-pointer"
+            >
+              <CheckCircle className="h-4 w-4" />
+              <span>تحديد كمدفوع</span>
+            </button>
+          )}
+          <button
+            onClick={() => handleDeletePayment(pay.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-605 dark:text-slate-305 text-xs font-semibold hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-655 dark:hover:text-rose-400 transition-all cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span>حذف</span>
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -184,84 +352,68 @@ export const Payments: React.FC = () => {
       </div>
 
       {/* Payments History Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
-        {paymentsLoading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="h-10 w-10 text-emerald-500 animate-spin mb-4" />
-            <p className="text-slate-500 dark:text-slate-400 font-medium">جاري تحميل المدفوعات...</p>
-          </div>
-        ) : filteredPayments.length === 0 ? (
-          <EmptyState
-            title="لا توجد مدفوعات مطابقة"
-            description="عدّل معايير البحث أو سجّل معاملة عميل جديدة أعلاه."
-            icon={<CreditCard className="h-6 w-6" />}
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] font-extrabold uppercase tracking-wider">
-                  <th className="px-6 py-4">رقم الإيصال</th>
-                  <th className="px-6 py-4">اسم العضو</th>
-                  <th className="px-6 py-4">تاريخ المعاملة</th>
-                  <th className="px-6 py-4">المبلغ</th>
-                  <th className="px-6 py-4">طريقة الدفع</th>
-                  <th className="px-6 py-4">الحالة</th>
-                  <th className="px-6 py-4 text-left">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300">
-                {filteredPayments.map((pay) => (
-                  <tr key={pay.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200 text-xs">
-                      {pay.id}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-slate-850 dark:text-slate-100">
-                      {pay.memberName}
-                    </td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-semibold text-xs">
-                      {pay.date}
-                    </td>
-                    <td className="px-6 py-4 font-black text-slate-800 dark:text-slate-100">
-                      ${pay.amount.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-semibold text-xs">
-                      {methodLabels[pay.method] || pay.method}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge type={pay.status} />
-                    </td>
-                    <td className="px-6 py-4 text-left">
-                      <div className="inline-flex items-center gap-1.5">
-                        <button
-                          onClick={() => setTab('member-details', pay.memberId)}
-                          className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-100 dark:hover:border-indigo-800 transition-all focus:outline-none"
-                          title="عرض ملف العضو"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {pay.status === 'pending' && (
-                          <button
-                            onClick={() => handleMarkPaid(pay.id)}
-                            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-100 dark:hover:border-emerald-800 transition-all focus:outline-none"
-                            title="تحديد كمدفوع"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeletePayment(pay.id)}
-                          className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:border-rose-100 dark:hover:border-rose-800 transition-all focus:outline-none"
-                          title="حذف الدفعة"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden p-4">
+        <ResponsiveTable
+          columns={columns}
+          data={paginatedPayments}
+          isLoading={paymentsLoading}
+          renderMobileCard={renderMobileCard}
+          rowKey={(pay) => pay.id}
+          emptyState={
+            <EmptyState
+              title="لا توجد مدفوعات مطابقة"
+              description="عدّل معايير البحث أو سجّل معاملة عميل جديدة أعلاه."
+              icon={<CreditCard className="h-6 w-6" />}
+            />
+          }
+        />
+
+        {!paymentsLoading && totalItems > 0 && (
+          /* Pagination Controls */
+          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30 mt-4">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              عرض <span className="font-bold text-slate-800 dark:text-slate-205">{(currentPage - 1) * itemsPerPage + 1}</span> إلى{' '}
+              <span className="font-bold text-slate-800 dark:text-slate-205">
+                {Math.min(currentPage * itemsPerPage, totalItems)}
+              </span>{' '}
+              من <span className="font-bold text-slate-800 dark:text-slate-205">{totalItems}</span> دفعة
+            </span>
+
+            <div className="inline-flex gap-1.5">
+              <button
+                id="prev-page"
+                aria-label="الصفحة السابقة"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((c) => Math.max(c - 1, 1))}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 disabled:hover:text-slate-500 transition-all focus:outline-none cursor-pointer"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 rounded-lg border text-xs font-bold transition-all focus:outline-none cursor-pointer ${
+                    currentPage === page
+                      ? 'bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:border-slate-100 dark:text-slate-900 shadow-xs'
+                      : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-205'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                id="next-page"
+                aria-label="الصفحة التالية"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((c) => Math.min(c + 1, totalPages))}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 disabled:hover:text-slate-500 transition-all focus:outline-none cursor-pointer"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -368,6 +520,16 @@ export const Payments: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={!!pendingDeleteId}
+        onClose={() => setPendingDeleteId(null)}
+        onConfirm={confirmDeletePayment}
+        title="حذف الدفعة"
+        message="هل أنت متأكد من حذف هذه الدفعة؟ لا يمكن التراجع عن هذا الإجراء."
+        confirmText="تأكيد الحذف"
+        type="danger"
+      />
     </div>
   );
 };

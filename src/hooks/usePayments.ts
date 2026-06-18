@@ -1,28 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useGym } from '../context/GymContext';
 import { paymentService } from '../services/paymentService';
 import type { Payment } from '../types';
 
 export const usePayments = () => {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    const unsubscribe = paymentService.subscribeToPayments((data, err) => {
-      if (err) {
-        setError(err);
-      } else {
-        setPayments(data);
-        setError(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  return { payments, loading, error };
+  const { payments, paymentsLoading: loading } = useGym();
+  return { payments, loading, error: null };
 };
 
 export const useCreatePayment = () => {

@@ -25,14 +25,14 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getFormattedDate = () => {
+  const formattedDate = React.useMemo(() => {
     return new Date().toLocaleDateString('ar-SA', {
       weekday: 'short',
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
-  };
+  }, []);
 
   if (!currentAdmin) return null;
 
@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         {/* Hamburger Menu Toggle (Mobile) */}
         <button
           onClick={onMenuClick}
-          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none lg:hidden transition-colors border border-slate-200 dark:border-slate-700"
+          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none md:hidden transition-colors border border-slate-200 dark:border-slate-700"
           title="قائمة التنقل"
           aria-label="قائمة التنقل"
         >
@@ -59,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         {/* Current Date */}
         <div className="hidden md:flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-450 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 px-3 py-1.5 rounded-xl">
           <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-          <span>{getFormattedDate()}</span>
+          <span>{formattedDate}</span>
         </div>
 
         {/* Dark/Light Mode toggle */}

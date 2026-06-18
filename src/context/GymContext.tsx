@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { Admin, TabType, LogEntry, Plan, Coach } from '../types';
-import { INITIAL_LOGS } from '../mockData';
+import type { Admin, TabType, LogEntry, Plan, Coach, Member, Payment } from '../types';
 import { seedFirebaseDefaultData } from '../lib/firebase';
 import { planService } from '../services/planService';
 import { coachService } from '../services/coachService';
 import { staffService } from '../services/staffService';
+import { memberService } from '../services/memberService';
+import { paymentService } from '../services/paymentService';
 
 interface Toast {
   id: string;
@@ -13,7 +14,12 @@ interface Toast {
 }
 
 interface GymContextType {
+  members: Member[];
+  membersLoading: boolean;
+  payments: Payment[];
+  paymentsLoading: boolean;
   coaches: Coach[];
+  coachesLoading: boolean;
   plans: Plan[];
   logs: LogEntry[];
   currentAdmin: Admin | null;
@@ -37,11 +43,16 @@ const GymContext = createContext<GymContextType | undefined>(undefined);
 export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [coachesLoading, setCoachesLoading] = useState(true);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [membersLoading, setMembersLoading] = useState(true);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
   const [dbReady, setDbReady] = useState(false);
 
   const [logs, setLogs] = useState<LogEntry[]>(() => {
     const saved = localStorage.getItem('hulk_v2_logs');
-    return saved ? JSON.parse(saved) : INITIAL_LOGS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [currentAdmin, setCurrentAdmin] = useState<Admin | null>(() => {
@@ -62,7 +73,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (saved as 'light' | 'dark') || 'light';
   });
 
-  // ─── DB Initialization ───────────────────────────────────────────────────
+  // ─── DB Initialization & Live Subscriptions ──────────────────────────────
   useEffect(() => {
     seedFirebaseDefaultData().then(() => {
       setDbReady(true);
@@ -80,11 +91,35 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   useEffect(() => {
-    if (dbReady) {
-      refetchPlans();
-      refetchCoaches();
-    }
-  }, [dbReady, refetchPlans, refetchCoaches]);
+    if (!dbReady) return;
+
+    refetchPlans();
+
+    // Live Subscriptions
+    setMembersLoading(true);
+    const unsubMembers = memberService.subscribeToMembers((data, err) => {
+      if (!err) setMembers(data);
+      setMembersLoading(false);
+    });
+
+    setPaymentsLoading(true);
+    const unsubPayments = paymentService.subscribeToPayments((data, err) => {
+      if (!err) setPayments(data);
+      setPaymentsLoading(false);
+    });
+
+    setCoachesLoading(true);
+    const unsubCoaches = coachService.subscribeToCoaches((data, err) => {
+      if (!err) setCoaches(data);
+      setCoachesLoading(false);
+    });
+
+    return () => {
+      unsubMembers();
+      unsubPayments();
+      unsubCoaches();
+    };
+  }, [dbReady, refetchPlans]);
   // ─────────────────────────────────────────────────────────────────────────
 
   // Sync logs & admin to localStorage
@@ -180,7 +215,12 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <GymContext.Provider
       value={{
+        members,
+        membersLoading,
+        payments,
+        paymentsLoading,
         coaches,
+        coachesLoading,
         plans,
         logs,
         currentAdmin,

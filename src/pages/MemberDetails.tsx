@@ -7,6 +7,8 @@ import { useCoaches } from '../hooks/useCoaches';
 import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { EmptyState } from '../components/common/EmptyState';
+import { ResponsiveTable } from '../components/common/ResponsiveTable';
+import type { TableColumn } from '../components/common/ResponsiveTable';
 import {
   ArrowRight,
   User,
@@ -64,6 +66,70 @@ export const MemberDetails: React.FC = () => {
       setEditableCoachId(member.coachId || '');
     }
   }, [member]);
+
+  // helper to translate payment methods for column mapping
+  // Helper to translate payment methods
+  const translateMethod = (method: string) => {
+    switch (method) {
+      case 'Credit Card':
+        return 'بطاقة ائتمانية';
+      case 'Cash':
+        return 'نقدًا';
+      case 'Bank Transfer':
+        return 'تحويل بنكي';
+      case 'Mobile Payment':
+        return 'الدفع عبر الهاتف';
+      default:
+        return method;
+    }
+  };
+
+  const paymentColumns: TableColumn<any>[] = [
+    {
+      key: 'id',
+      header: 'رقم الإيصال',
+      render: (p) => <span className="font-bold text-slate-800 dark:text-slate-200">{p.id}</span>
+    },
+    {
+      key: 'date',
+      header: 'التاريخ',
+      render: (p) => <span>{p.date}</span>
+    },
+    {
+      key: 'method',
+      header: 'طريقة الدفع',
+      render: (p) => <span className="text-slate-500 dark:text-slate-400">{translateMethod(p.method)}</span>
+    },
+    {
+      key: 'amount',
+      header: 'المبلغ',
+      render: (p) => <span className="font-bold text-slate-850 dark:text-slate-100">{p.amount.toFixed(2)} شيكل</span>
+    },
+    {
+      key: 'status',
+      header: 'الحالة',
+      render: (p) => <Badge type={p.status} />
+    }
+  ];
+
+  const renderPaymentMobileCard = (p: any) => (
+    <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-xl shadow-xs space-y-2.5">
+      <div className="flex justify-between items-center text-xs">
+        <span className="font-bold text-slate-800 dark:text-slate-200">إيصال #{p.id}</span>
+        <Badge type={p.status} />
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-slate-50 dark:border-slate-800/50">
+        <div>
+          <span className="block text-slate-400 dark:text-slate-500">التاريخ</span>
+          <span className="font-semibold text-slate-705 dark:text-slate-300">{p.date}</span>
+        </div>
+        <div>
+          <span className="block text-slate-400 dark:text-slate-500">المبلغ وطريقة الدفع</span>
+          <span className="font-bold text-slate-850 dark:text-slate-100 block">{p.amount.toFixed(2)} شيكل ({translateMethod(p.method)})</span>
+        </div>
+      </div>
+    </div>
+  );
 
   if (!member) {
     return (
@@ -143,22 +209,6 @@ export const MemberDetails: React.FC = () => {
     if (g === 'Male') return 'ذكر';
     if (g === 'Female') return 'أنثى';
     return g;
-  };
-
-  // Helper to translate payment methods
-  const translateMethod = (method: string) => {
-    switch (method) {
-      case 'Credit Card':
-        return 'بطاقة ائتمانية';
-      case 'Cash':
-        return 'نقدًا';
-      case 'Bank Transfer':
-        return 'تحويل بنكي';
-      case 'Mobile Payment':
-        return 'الدفع عبر الهاتف';
-      default:
-        return method;
-    }
   };
 
   return (
@@ -324,31 +374,13 @@ export const MemberDetails: React.FC = () => {
                 icon={<CreditCard className="h-5 w-5" />}
               />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-right border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[9px] font-extrabold uppercase tracking-wider">
-                      <th className="px-6 py-3">رقم الإيصال</th>
-                      <th className="px-6 py-3">التاريخ</th>
-                      <th className="px-6 py-3">طريقة الدفع</th>
-                      <th className="px-6 py-3">المبلغ</th>
-                      <th className="px-6 py-3">الحالة</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold text-slate-650 dark:text-slate-300">
-                    {memberPayments.map((p) => (
-                      <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                        <td className="px-6 py-3.5 font-bold text-slate-800 dark:text-slate-200">{p.id}</td>
-                        <td className="px-6 py-3.5">{p.date}</td>
-                        <td className="px-6 py-3.5 text-slate-500 dark:text-slate-400">{translateMethod(p.method)}</td>
-                        <td className="px-6 py-3.5 font-bold text-slate-850 dark:text-slate-100">{p.amount.toFixed(2)} شيكل</td>
-                        <td className="px-6 py-3.5">
-                          <Badge type={p.status} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="p-4">
+                <ResponsiveTable
+                  columns={paymentColumns}
+                  data={memberPayments}
+                  renderMobileCard={renderPaymentMobileCard}
+                  rowKey={(p) => p.id}
+                />
               </div>
             )}
           </div>

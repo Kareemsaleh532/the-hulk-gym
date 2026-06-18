@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useGym } from '../context/GymContext';
 import { Modal } from '../components/common/Modal';
 import { EmptyState } from '../components/common/EmptyState';
+import { ResponsiveTable } from '../components/common/ResponsiveTable';
+import type { TableColumn } from '../components/common/ResponsiveTable';
 import { planService } from '../services/planService';
 import { coachService } from '../services/coachService';
 import { staffService, type StaffMember } from '../services/staffService';
@@ -235,6 +237,121 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  // ─── Staff columns for ResponsiveTable ─────────────────────────────────────────
+  const staffColumns: TableColumn<StaffMember>[] = [
+    {
+      key: 'name',
+      header: 'الموظف',
+      render: (member) => {
+        const initials = member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+              {initials}
+            </div>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{member.name}</span>
+            {member.id === currentAdmin?.id && (
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50 px-1.5 py-0.5 rounded-md">أنت</span>
+            )}
+          </div>
+        );
+      }
+    },
+    {
+      key: 'email',
+      header: 'البريد الإلكتروني',
+      render: (member) => (
+        <span className="text-slate-500 dark:text-slate-400 text-xs font-semibold">{member.email}</span>
+      )
+    },
+    {
+      key: 'role',
+      header: 'الدور',
+      render: (member) => (
+        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-bold ${roleBadge[member.role]}`}>
+          <UserCheck className="h-3 w-3" />
+          {roleLabel[member.role]}
+        </span>
+      )
+    },
+    {
+      key: 'created_at',
+      header: 'تاريخ الإضافة',
+      render: (member) => (
+        <span className="text-slate-400 dark:text-slate-500 text-xs font-semibold">
+          {new Date(member.created_at).toLocaleDateString('ar-SA')}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'الإجراءات',
+      align: 'left',
+      render: (member) => (
+        <div className="inline-flex gap-1.5">
+          <button
+            onClick={() => openStaffModal(member)}
+            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-100 dark:hover:border-indigo-800 transition-all cursor-pointer"
+            title="تعديل"
+          >
+            <Edit2 className="h-4 w-4" />
+          </button>
+          {member.id !== currentAdmin?.id && (
+            <button
+              onClick={() => handleDeleteStaff(member.id, member.name)}
+              className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:border-rose-100 dark:hover:border-rose-800 transition-all cursor-pointer"
+              title="حذف"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      )
+    }
+  ];
+
+  const renderStaffMobileCard = (member: StaffMember) => {
+    const initials = member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    return (
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl shadow-xs space-y-3">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+              {initials}
+            </div>
+            <div>
+              <span className="font-bold text-slate-800 dark:text-slate-200 block">{member.name}</span>
+              <span className="text-[10px] text-slate-400 block">{member.email}</span>
+            </div>
+          </div>
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold ${roleBadge[member.role]}`}>
+            <UserCheck className="h-3 w-3" />
+            {roleLabel[member.role]}
+          </span>
+        </div>
+        <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-55 dark:border-slate-800/50">
+          <span className="text-slate-400">تاريخ الإضافة: {new Date(member.created_at).toLocaleDateString('ar-SA')}</span>
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => openStaffModal(member)}
+              className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 hover:text-indigo-650 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all cursor-pointer"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+            </button>
+            {member.id !== currentAdmin?.id && (
+              <button
+                onClick={() => handleDeleteStaff(member.id, member.name)}
+                className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 hover:text-rose-650 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all cursor-pointer"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ─── Tabs config ─────────────────────────────────────────────────────────────
   const tabs = [
     { id: 'plans' as AdminTab, label: 'خطط العضوية', icon: Award, count: plans.length },
@@ -396,7 +513,7 @@ export const AdminPanel: React.FC = () => {
 
       {/* ─── STAFF TAB ───────────────────────────────────────────────────────── */}
       {activeTab === 'staff' && isAdmin && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs">
           {staffLoading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-10 w-10 text-emerald-500 animate-spin" />
@@ -404,69 +521,13 @@ export const AdminPanel: React.FC = () => {
           ) : staffList.length === 0 ? (
             <EmptyState title="لا يوجد موظفون" description="أضف موظفاً جديداً من الزر أعلاه." icon={<Users className="h-6 w-6" />} />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-right border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] font-extrabold uppercase tracking-wider">
-                    <th className="px-6 py-4">الموظف</th>
-                    <th className="px-6 py-4">البريد الإلكتروني</th>
-                    <th className="px-6 py-4">الدور</th>
-                    <th className="px-6 py-4">تاريخ الإضافة</th>
-                    <th className="px-6 py-4 text-left">الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {staffList.map(member => {
-                    const initials = member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-                    return (
-                      <tr key={member.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
-                              {initials}
-                            </div>
-                            <span className="font-bold text-slate-800 dark:text-slate-200">{member.name}</span>
-                            {member.id === currentAdmin?.id && (
-                              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50 px-1.5 py-0.5 rounded-md">أنت</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs font-semibold">{member.email}</td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-bold ${roleBadge[member.role]}`}>
-                            <UserCheck className="h-3 w-3" />
-                            {roleLabel[member.role]}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                          {new Date(member.created_at).toLocaleDateString('ar-SA')}
-                        </td>
-                        <td className="px-6 py-4 text-left">
-                          <div className="inline-flex gap-1.5">
-                            <button
-                              onClick={() => openStaffModal(member)}
-                              className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-100 dark:hover:border-indigo-800 transition-all cursor-pointer"
-                              title="تعديل"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            {member.id !== currentAdmin?.id && (
-                              <button
-                                onClick={() => handleDeleteStaff(member.id, member.name)}
-                                className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:border-rose-100 dark:hover:border-rose-800 transition-all cursor-pointer"
-                                title="حذف"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              columns={staffColumns}
+              data={staffList}
+              isLoading={staffLoading}
+              renderMobileCard={renderStaffMobileCard}
+              rowKey={(member) => member.id}
+            />
           )}
         </div>
       )}

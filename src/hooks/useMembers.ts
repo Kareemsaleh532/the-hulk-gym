@@ -1,28 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useGym } from '../context/GymContext';
 import { memberService } from '../services/memberService';
 import type { Member, Payment } from '../types';
 
 export const useMembers = () => {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    const unsubscribe = memberService.subscribeToMembers((data, err) => {
-      if (err) {
-        setError(err);
-      } else {
-        setMembers(data);
-        setError(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  return { members, loading, error };
+  const { members, membersLoading: loading } = useGym();
+  return { members, loading, error: null };
 };
 
 export const useCreateMember = () => {

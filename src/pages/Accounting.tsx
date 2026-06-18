@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useGym } from '../context/GymContext';
 import { accountingService, type AccountingStats } from '../services/accountingService';
 import { type DbTransaction } from '../types';
 import { Modal } from '../components/common/Modal';
+import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { EmptyState } from '../components/common/EmptyState';
+import { ResponsiveTable } from '../components/common/ResponsiveTable';
+import type { TableColumn } from '../components/common/ResponsiveTable';
+import { formatCurrency } from '../utils/helpers';
 import {
   TrendingUp, TrendingDown, Plus, Minus,
-  Loader2, Wallet, Calendar, Tag, User, Save, X, Trash2
+  Loader2, Wallet, Calendar, Tag, User, Save, X, Trash2, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 export const Accounting: React.FC = () => {
@@ -19,6 +23,10 @@ export const Accounting: React.FC = () => {
   // Filters
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
   // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'income' | 'expense'>('income');
@@ -29,6 +37,11 @@ export const Accounting: React.FC = () => {
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Reset pagination on filter type change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -83,18 +96,147 @@ export const Accounting: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا السجل المالي؟')) return;
-    try {
-      await accountingService.deleteTransaction(id);
-      addToast('success', 'تم الحذف بنجاح');
-      loadData();
-    } catch (err) {
-      addToast('error', 'فشل في حذف السجل');
+  // Confirm dialog state
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const handleDelete = (id: string) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (pendingDeleteId) {
+      try {
+        await accountingService.deleteTransaction(pendingDeleteId);
+        addToast('success', 'تم الحذف بنجاح');
+        loadData();
+      } catch (err) {
+        addToast('error', 'فشل في حذف السجل');
+      }
     }
   };
 
-  const formatCurrency = (num: number) => num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Pagination calculations
+  const totalItems = transactions.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const paginatedTransactions = useMemo(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    return transactions.slice(startIdx, startIdx + itemsPerPage);
+  }, [transactions, currentPage]);
+
+  const columns = useMemo<TableColumn<any>[]>(() => [
+    {
+      key: 'date',
+      header: 'التاريخ',
+      render: (tx) => (
+        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+          <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+          {tx.date}
+        </div>
+      )
+    },
+    {
+      key: 'description',
+      header: 'البيان',
+      render: (tx) => (
+        <span className="font-bold text-slate-850 dark:text-slate-205">{tx.description || 'بدون بيان'}</span>
+      )
+    },
+    {
+      key: 'category',
+      header: 'التصنيف',
+      render: (tx) => (
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-505 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md">
+          <Tag className="h-3 w-3" />
+          {tx.category === 'membership' ? 'اشتراكات' :
+           tx.category === 'product_sale' ? 'مبيعات' :
+           tx.category === 'salary' ? 'رواتب' :
+           tx.category === 'utilities' ? 'فواتير' :
+           tx.category === 'maintenance' ? 'صيانة' : 'أخرى'}
+        </span>
+      )
+    },
+    {
+      key: 'amount',
+      header: 'المبلغ',
+      render: (tx) => (
+        <span className={`font-black flex items-center gap-1 ${tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+          {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, 2)} شيكل
+        </span>
+      )
+    },
+    {
+      key: 'created_by',
+      header: 'الموظف',
+      render: (tx) => (
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <User className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+          {tx.created_by}
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'الإجراءات',
+      align: 'left',
+      render: (tx) => (
+        <button
+          onClick={() => handleDelete(tx.id)}
+          className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-rose-650 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:border-rose-100 dark:hover:border-rose-800 transition-all focus:outline-none cursor-pointer"
+          title="حذف السجل"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )
+    }
+  ], []);
+
+  const renderMobileCard = (tx: any) => {
+    return (
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 p-5 rounded-2xl shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="min-w-0">
+            <span className="block font-bold text-slate-850 dark:text-slate-205 truncate text-right">
+              {tx.description || 'بدون بيان'}
+            </span>
+            <span className="block text-[10px] text-slate-450 dark:text-slate-500 font-semibold mt-0.5 text-right">
+              بواسطة: {tx.created_by}
+            </span>
+          </div>
+          <span className={`font-black flex items-center gap-0.5 text-sm ${tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+            {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, 2)} شيكل
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 py-3 border-y border-slate-50 dark:border-slate-800 text-xs">
+          <div>
+            <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1 text-right">التصنيف</span>
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-550 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-150 dark:border-slate-700 px-2 py-0.5 rounded-md">
+              <Tag className="h-3 w-3" />
+              {tx.category === 'membership' ? 'اشتراكات' :
+               tx.category === 'product_sale' ? 'مبيعات' :
+               tx.category === 'salary' ? 'رواتب' :
+               tx.category === 'utilities' ? 'فواتير' :
+               tx.category === 'maintenance' ? 'صيانة' : 'أخرى'}
+            </span>
+          </div>
+          <div>
+            <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1 text-right">التاريخ</span>
+            <span className="font-semibold text-slate-850 dark:text-slate-205 block text-right">{tx.date}</span>
+          </div>
+        </div>
+
+        <div className="flex justify-end font-semibold">
+          <button
+            onClick={() => handleDelete(tx.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-605 dark:text-slate-305 text-xs hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-650 dark:hover:text-rose-400 transition-all cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span>حذف السجل</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
@@ -175,7 +317,7 @@ export const Accounting: React.FC = () => {
                 <div>
                   <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">صافي الربح</p>
                   <h3 className={`text-3xl font-black ${(stats?.netProfit || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                    {formatCurrency(stats?.netProfit || 0)} <span className="text-sm opacity-60">شيكل</span>
+                    {formatCurrency(stats?.netProfit || 0, 2)} <span className="text-sm opacity-60">شيكل</span>
                   </h3>
                 </div>
                 <div className={`p-3 rounded-xl ${(stats?.netProfit || 0) >= 0 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400'}`}>
@@ -184,14 +326,14 @@ export const Accounting: React.FC = () => {
               </div>
               <div className="mt-4 flex items-center gap-2 text-xs font-semibold">
                 <span className="text-slate-400 dark:text-slate-500">الشهر السابق:</span>
-                <span className="text-slate-700 dark:text-slate-300">{formatCurrency(stats?.lastMonthProfit || 0)}</span>
+                <span className="text-slate-700 dark:text-slate-300">{formatCurrency(stats?.lastMonthProfit || 0, 2)}</span>
               </div>
             </div>
           </div>
 
           {/* Ledger / Transactions Table */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden mt-8">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 dark:bg-slate-950/30">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden mt-8 p-4">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 dark:bg-slate-950/30 mb-4 rounded-xl">
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">سجل الحركات المالية</h3>
               <div className="flex gap-2">
                 {(['all', 'income', 'expense'] as const).map(f => (
@@ -199,7 +341,7 @@ export const Accounting: React.FC = () => {
                     key={f}
                     onClick={() => setFilterType(f)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus:outline-none ${
-                      filterType === f ? 'bg-slate-900 dark:bg-emerald-600 text-white shadow-sm' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                      filterType === f ? 'bg-slate-900 dark:bg-emerald-600 text-white shadow-sm' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-605 dark:text-slate-305 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     {f === 'all' ? 'الكل' : f === 'income' ? 'الإيرادات فقط' : 'المصروفات فقط'}
@@ -208,67 +350,63 @@ export const Accounting: React.FC = () => {
               </div>
             </div>
 
-            {transactions.length === 0 ? (
-              <EmptyState title="لا توجد سجلات" description="لم يتم تسجيل أي حركات مالية بعد." icon={<Wallet className="h-6 w-6" />} />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-right border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/80 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] font-extrabold uppercase tracking-wider">
-                      <th className="px-6 py-4">التاريخ</th>
-                      <th className="px-6 py-4">البيان</th>
-                      <th className="px-6 py-4">التصنيف</th>
-                      <th className="px-6 py-4">المبلغ</th>
-                      <th className="px-6 py-4">الموظف</th>
-                      <th className="px-6 py-4">الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {transactions.map(tx => (
-                      <tr key={tx.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                        <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs font-semibold">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-                            {tx.date}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{tx.description || 'بدون بيان'}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md">
-                            <Tag className="h-3 w-3" />
-                            {tx.category === 'membership' ? 'اشتراكات' :
-                             tx.category === 'product_sale' ? 'مبيعات' :
-                             tx.category === 'salary' ? 'رواتب' :
-                             tx.category === 'utilities' ? 'فواتير' :
-                             tx.category === 'maintenance' ? 'صيانة' : 'أخرى'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`font-black flex items-center gap-1 ${tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                            {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                          <div className="flex items-center gap-1.5">
-                            <User className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-                            {tx.created_by}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-left">
-                          <button
-                            onClick={() => handleDelete(tx.id)}
-                            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:border-rose-100 dark:hover:border-rose-800 transition-all focus:outline-none cursor-pointer"
-                            title="حذف السجل"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <ResponsiveTable
+              columns={columns}
+              data={paginatedTransactions}
+              isLoading={loading}
+              renderMobileCard={renderMobileCard}
+              rowKey={(tx) => tx.id}
+              emptyState={
+                <EmptyState title="لا توجد سجلات" description="لم يتم تسجيل أي حركات مالية بعد." icon={<Wallet className="h-6 w-6" />} />
+              }
+            />
+
+            {!loading && totalItems > 0 && (
+              /* Pagination Controls */
+              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30 mt-4">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  عرض <span className="font-bold text-slate-800 dark:text-slate-205">{(currentPage - 1) * itemsPerPage + 1}</span> إلى{' '}
+                  <span className="font-bold text-slate-800 dark:text-slate-205">
+                    {Math.min(currentPage * itemsPerPage, totalItems)}
+                  </span>{' '}
+                  من <span className="font-bold text-slate-800 dark:text-slate-205">{totalItems}</span> حركة مالية
+                </span>
+
+                <div className="inline-flex gap-1.5">
+                  <button
+                    id="prev-page"
+                    aria-label="الصفحة السابقة"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((c) => Math.max(c - 1, 1))}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 disabled:hover:text-slate-500 transition-all focus:outline-none cursor-pointer"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded-lg border text-xs font-bold transition-all focus:outline-none cursor-pointer ${
+                        currentPage === page
+                          ? 'bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:border-slate-100 dark:text-slate-900 shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-205'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    id="next-page"
+                    aria-label="الصفحة التالية"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((c) => Math.min(c + 1, totalPages))}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 disabled:hover:text-slate-500 transition-all focus:outline-none cursor-pointer"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -324,6 +462,16 @@ export const Accounting: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={!!pendingDeleteId}
+        onClose={() => setPendingDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="حذف السجل المالي"
+        message="هل أنت متأكد من حذف هذا السجل المالي؟ لا يمكن التراجع عن هذا الإجراء."
+        confirmText="تأكيد الحذف"
+        type="danger"
+      />
     </div>
   );
 };
