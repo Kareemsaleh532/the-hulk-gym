@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useGym } from '../context/GymContext';
-import { useMembers } from '../hooks/useMembers';
+import { useFilteredMembers } from '../hooks/useFilteredMembers';
 import { usePayments } from '../hooks/usePayments';
 import { formatCurrency } from '../utils/helpers';
 import {
@@ -18,7 +18,7 @@ import {
 
 export const Dashboard: React.FC = () => {
   const { logs, setTab, currentAdmin } = useGym();
-  const { members } = useMembers();
+  const { members } = useFilteredMembers();
   const { payments } = usePayments();
 
   // Get current year-month and Arabic name of the current month

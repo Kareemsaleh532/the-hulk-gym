@@ -18,6 +18,7 @@ export const coachService = {
         phone: data.phone,
         specialty: data.specialty,
         avatar: data.avatar,
+        gender: data.gender || undefined,
         assignedMembersCount: assignedMembersCount,
       });
     }
@@ -45,6 +46,7 @@ export const coachService = {
             phone: data.phone,
             specialty: data.specialty,
             avatar: data.avatar,
+            gender: data.gender || undefined,
             assignedMembersCount: assignedMembersCount,
           });
         }
@@ -67,6 +69,7 @@ export const coachService = {
       phone: coach.phone,
       specialty: coach.specialty,
       avatar: coach.avatar,
+      gender: coach.gender || undefined,
       created_at: new Date().toISOString(),
     });
   },

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useGym } from '../context/GymContext';
 import { useMembers, useUpdateMember } from '../hooks/useMembers';
-import { useRenewMembership } from '../hooks/useMemberships';
+import { useRenewMembership, useWithdrawMembership } from '../hooks/useMemberships';
 import { usePayments, useCreatePayment } from '../hooks/usePayments';
 import { useCoaches } from '../hooks/useCoaches';
 import { Badge } from '../components/common/Badge';
@@ -20,7 +20,8 @@ import {
   Save,
   RefreshCw,
   PlusCircle,
-  Loader2
+  Loader2,
+  UserMinus
 } from 'lucide-react';
 
 export const MemberDetails: React.FC = () => {
@@ -35,6 +36,7 @@ export const MemberDetails: React.FC = () => {
   const { payments } = usePayments();
   const { updateMember, loading: updating } = useUpdateMember();
   const { renewMembership, loading: renewing } = useRenewMembership();
+  const { withdrawMembership, loading: withdrawing } = useWithdrawMembership();
   const { createPayment, loading: paying } = useCreatePayment();
   const { coaches } = useCoaches();
 
@@ -45,6 +47,7 @@ export const MemberDetails: React.FC = () => {
   const [editableCoachId, setEditableCoachId] = useState(member?.coachId || '');
   const [isRenewOpen, setIsRenewOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
 
   // Renew form state
   const [renewPlanId, setRenewPlanId] = useState(plans[0]?.id || 'plan-basic');
@@ -321,6 +324,15 @@ export const MemberDetails: React.FC = () => {
               </div>
 
               <div className="flex gap-2">
+                {member.status === 'active' && (
+                  <button
+                    onClick={() => setIsWithdrawOpen(true)}
+                    className="flex items-center gap-1 px-3 py-2 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-150 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 font-bold text-xs transition-all cursor-pointer"
+                  >
+                    <UserMinus className="h-3.5 w-3.5" />
+                    <span>انسحاب</span>
+                  </button>
+                )}
                 <button
                   onClick={() => setIsRenewOpen(true)}
                   className="flex items-center gap-1 px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-150 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-bold text-xs transition-all cursor-pointer"
@@ -593,6 +605,46 @@ export const MemberDetails: React.FC = () => {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Withdraw Modal */}
+      <Modal
+        isOpen={isWithdrawOpen}
+        onClose={() => setIsWithdrawOpen(false)}
+        title={`تأكيد الانسحاب للعضو ${member.name}`}
+      >
+        <div className="space-y-4">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            هل أنت متأكد من رغبتك في سحب اشتراك هذا العضو؟
+            <br />
+            سيتم حساب المبلغ المسترد تلقائياً وإضافته كمرتجع.
+          </p>
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => setIsWithdrawOpen(false)}
+              className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors"
+            >
+              إلغاء
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await withdrawMembership(member.id);
+                  addToast('success', 'تم تسجيل الانسحاب بنجاح');
+                  setIsWithdrawOpen(false);
+                } catch (err: any) {
+                  addToast('error', err.message || 'حدث خطأ أثناء تسجيل الانسحاب');
+                }
+              }}
+              disabled={withdrawing}
+              className="px-4 py-2 bg-red-500 hover:bg-red-400 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-colors inline-flex items-center gap-2"
+            >
+              {withdrawing && <Loader2 className="h-3 w-3 animate-spin" />}
+              تأكيد الانسحاب
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

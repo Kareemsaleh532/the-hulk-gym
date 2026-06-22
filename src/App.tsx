@@ -1,5 +1,6 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { GymProvider, useGym } from './context/GymContext';
+import { useAuth } from './hooks/useAuth';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { ToastContainer } from './components/common/Toast';
@@ -44,8 +45,16 @@ const Settings = React.lazy(() => import('./pages/Settings').then(m => ({ defaul
 const Notifications = React.lazy(() => import('./pages/Notifications').then(m => ({ default: m.Notifications })));
 
 const AppContent: React.FC = () => {
-  const { currentAdmin, activeTab } = useGym();
+  const { currentAdmin, activeTab, setTab } = useGym();
+  const { canAccessTab } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Route guard: redirect to dashboard if user navigates to a restricted page
+  useEffect(() => {
+    if (currentAdmin && activeTab !== 'login' && !canAccessTab(activeTab)) {
+      setTab('dashboard');
+    }
+  }, [activeTab, currentAdmin, canAccessTab, setTab]);
 
   // If not authenticated or on login, render login page
   if (!currentAdmin || activeTab === 'login') {

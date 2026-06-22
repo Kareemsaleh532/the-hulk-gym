@@ -185,6 +185,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       name: staffMember.name,
       email: staffMember.email,
       role: staffMember.role,
+      gender: staffMember.gender,
       avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.name)}&background=22c55e&color=fff`,
     };
 

@@ -58,8 +58,9 @@ export async function seedFirebaseDefaultData() {
     const staffSnapshot = await getDocs(staffQuery);
     if (staffSnapshot.empty) {
       const defaultStaff = [
-        { id: 'staff-admin', name: 'مدير النادي', email: 'admin@hulkgym.com', password: 'admin123', role: 'admin', created_at: now },
-        { id: 'staff-1',    name: 'موظف النادي',  email: 'staff@hulkgym.com', password: 'staff123', role: 'staff', created_at: now },
+        { id: 'staff-admin', name: 'مدير النادي', email: 'admin@hulkgym.com', password: 'admin123', role: 'admin', gender: 'male', created_at: now },
+        { id: 'staff-1',    name: 'موظف الشباب',  email: 'staff@hulkgym.com', password: 'staff123', role: 'staff', gender: 'male', created_at: now },
+        { id: 'staff-2',    name: 'موظفة البنات', email: 'staff_f@hulkgym.com', password: 'staff123', role: 'staff', gender: 'female', created_at: now },
       ];
       for (const member of defaultStaff) {
         await setDoc(doc(db, 'staff', member.id), member);

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGym } from '../context/GymContext';
 import { usePayments, useCreatePayment, useUpdatePaymentStatus, useDeletePayment } from '../hooks/usePayments';
-import { useMembers } from '../hooks/useMembers';
+import { useFilteredMembers } from '../hooks/useFilteredMembers';
 import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
@@ -14,7 +14,7 @@ import { Search, Filter, Plus, Eye, CreditCard, Loader2, Trash2, CheckCircle, Ch
 export const Payments: React.FC = () => {
   const { setTab, addToast } = useGym();
   const { payments, loading: paymentsLoading } = usePayments();
-  const { members } = useMembers();
+  const { members } = useFilteredMembers();
   const { createPayment, loading: paying } = useCreatePayment();
   const { updateStatus } = useUpdatePaymentStatus();
   const { deletePayment } = useDeletePayment();
@@ -61,9 +61,15 @@ export const Payments: React.FC = () => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, dateFilter]);
 
+  // Get authorized member IDs for payment filtering
+  const authorizedMemberIds = useMemo(() => new Set(members.map(m => m.id)), [members]);
+
   // Filter payments
   const filteredPayments = useMemo(() => {
     return payments.filter((pay) => {
+      // Only show payments for members the staff is authorized to see
+      const matchesMemberAccess = authorizedMemberIds.has(pay.memberId);
+
       const matchesSearch =
         pay.memberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pay.id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -79,9 +85,9 @@ export const Payments: React.FC = () => {
         matchesDate = pay.date.startsWith('2025');
       }
 
-      return matchesSearch && matchesStatus && matchesDate;
+      return matchesMemberAccess && matchesSearch && matchesStatus && matchesDate;
     });
-  }, [payments, searchTerm, statusFilter, dateFilter]);
+  }, [payments, searchTerm, statusFilter, dateFilter, authorizedMemberIds]);
 
   // Pagination calculations
   const totalItems = filteredPayments.length;

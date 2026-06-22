@@ -1,6 +1,7 @@
 export type MemberStatus = 'active' | 'expired' | 'expiring';
 export type PaymentStatus = 'paid' | 'pending' | 'failed';
 export type GenderType = 'Male' | 'Female' | 'Other';
+export type StaffGender = 'male' | 'female';
 export type TabType = 'login' | 'dashboard' | 'members' | 'add-member' | 'member-details' | 'memberships' | 'payments' | 'coaches' | 'reports' | 'settings' | 'admin' | 'accounting' | 'notifications';
 
 export interface User {
@@ -11,8 +12,9 @@ export interface User {
   avatar: string;
 }
 
-// Alias for clarity in context
-export type Admin = User;
+export interface Admin extends User {
+  gender?: StaffGender;
+}
 
 export interface Member {
   id: string;
@@ -52,6 +54,7 @@ export interface Coach {
   phone: string;
   specialty: string;
   avatar: string;
+  gender?: StaffGender;
   assignedMembersCount: number;
 }
 

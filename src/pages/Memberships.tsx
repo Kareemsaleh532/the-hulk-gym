@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useGym } from '../context/GymContext';
-import { useMembers } from '../hooks/useMembers';
+import { useFilteredMembers } from '../hooks/useFilteredMembers';
 import { useRenewMembership } from '../hooks/useMemberships';
 import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
@@ -14,7 +14,7 @@ type SubTabType = 'active' | 'expired' | 'expiring';
 
 export const Memberships: React.FC = () => {
   const { plans, setTab, addToast } = useGym();
-  const { members, loading: membersLoading } = useMembers();
+  const { members, loading: membersLoading } = useFilteredMembers();
   const { renewMembership, loading: renewing } = useRenewMembership();
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>('active');
 

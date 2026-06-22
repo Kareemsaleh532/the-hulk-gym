@@ -7,10 +7,12 @@ import type { TableColumn } from '../components/common/ResponsiveTable';
 import { planService } from '../services/planService';
 import { coachService } from '../services/coachService';
 import { staffService, type StaffMember } from '../services/staffService';
-import type { Plan, Coach } from '../types';
+import type { Plan, Coach, StaffGender } from '../types';
+import { useAuth } from '../hooks/useAuth';
+import { generateCredentials } from '../utils/generateCredentials';
 import {
   Award, Users, Shield, Plus, Trash2, Edit2, Save, X,
-  Loader2, CheckCircle, Phone, Dumbbell, Mail, Lock, UserCheck,
+  Loader2, CheckCircle, Phone, Dumbbell, Mail, Lock, UserCheck, Sparkles, Eye, EyeOff,
 } from 'lucide-react';
 
 type AdminTab = 'plans' | 'coaches' | 'staff';
@@ -26,10 +28,18 @@ const roleLabel: Record<string, string> = {
   manager: 'مدير',
   staff:   'موظف',
 };
+const genderLabel: Record<string, string> = {
+  male:   'شباب',
+  female: 'بنات',
+};
+const genderBadge: Record<string, string> = {
+  male:   'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800',
+  female: 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/30 dark:text-pink-400 dark:border-pink-800',
+};
 
 export const AdminPanel: React.FC = () => {
   const { currentAdmin, addToast, refetchPlans, refetchCoaches } = useGym();
-  const isAdmin = currentAdmin?.role === 'admin';
+  const { canManageStaff } = useAuth();
 
   const [activeTab, setActiveTab] = useState<AdminTab>('plans');
 
@@ -108,6 +118,7 @@ export const AdminPanel: React.FC = () => {
   const [coachName, setCoachName] = useState('');
   const [coachPhone, setCoachPhone] = useState('');
   const [coachSpecialty, setCoachSpecialty] = useState('');
+  const [coachGender, setCoachGender] = useState<StaffGender>('male');
   const [coachSaving, setCoachSaving] = useState(false);
 
   const loadCoaches = useCallback(async () => {
@@ -124,11 +135,13 @@ export const AdminPanel: React.FC = () => {
       setCoachName(coach.name);
       setCoachPhone(coach.phone);
       setCoachSpecialty(coach.specialty);
+      setCoachGender(coach.gender || 'male');
     } else {
       setEditingCoach(null);
       setCoachName('');
       setCoachPhone('');
       setCoachSpecialty('');
+      setCoachGender('male');
     }
     setIsCoachModalOpen(true);
   };
@@ -139,10 +152,10 @@ export const AdminPanel: React.FC = () => {
     setCoachSaving(true);
     try {
       if (editingCoach) {
-        await coachService.updateCoach(editingCoach.id, { name: coachName, phone: coachPhone, specialty: coachSpecialty });
+        await coachService.updateCoach(editingCoach.id, { name: coachName, phone: coachPhone, specialty: coachSpecialty, gender: coachGender });
         addToast('success', 'تم تحديث بيانات المدرب بنجاح');
       } else {
-        await coachService.createCoach({ name: coachName, phone: coachPhone, specialty: coachSpecialty, avatar: '' });
+        await coachService.createCoach({ name: coachName, phone: coachPhone, specialty: coachSpecialty, avatar: '', gender: coachGender });
         addToast('success', 'تم إضافة المدرب بنجاح');
       }
       await loadCoaches();
@@ -172,6 +185,8 @@ export const AdminPanel: React.FC = () => {
   const [staffEmail, setStaffEmail] = useState('');
   const [staffPassword, setStaffPassword] = useState('');
   const [staffRole, setStaffRole] = useState<'admin' | 'manager' | 'staff'>('staff');
+  const [staffGender, setStaffGender] = useState<StaffGender>('male');
+  const [showPassword, setShowPassword] = useState(false);
   const [staffSaving, setStaffSaving] = useState(false);
 
   const loadStaff = useCallback(async () => {
@@ -189,12 +204,14 @@ export const AdminPanel: React.FC = () => {
       setStaffEmail(member.email);
       setStaffPassword('');
       setStaffRole(member.role);
+      setStaffGender(member.gender || 'male');
     } else {
       setEditingStaff(null);
       setStaffName('');
       setStaffEmail('');
       setStaffPassword('');
       setStaffRole('staff');
+      setStaffGender('male');
     }
     setIsStaffModalOpen(true);
   };
@@ -209,12 +226,12 @@ export const AdminPanel: React.FC = () => {
     setStaffSaving(true);
     try {
       if (editingStaff) {
-        const update: any = { name: staffName, email: staffEmail, role: staffRole };
+        const update: any = { name: staffName, email: staffEmail, role: staffRole, gender: staffGender };
         if (staffPassword.trim()) update.password = staffPassword;
         await staffService.updateStaff(editingStaff.id, update);
         addToast('success', 'تم تحديث بيانات الموظف بنجاح');
       } else {
-        await staffService.createStaff({ name: staffName, email: staffEmail, password: staffPassword, role: staffRole });
+        await staffService.createStaff({ name: staffName, email: staffEmail, password: staffPassword, role: staffRole, gender: staffGender });
         addToast('success', 'تم إضافة الموظف بنجاح');
       }
       await loadStaff();
@@ -275,6 +292,18 @@ export const AdminPanel: React.FC = () => {
       )
     },
     {
+      key: 'gender',
+      header: 'القسم',
+      render: (member) => {
+        if (!member.gender) return <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold">غير محدد</span>;
+        return (
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-bold ${genderBadge[member.gender] || ''}`}>
+            {genderLabel[member.gender] || 'غير محدد'}
+          </span>
+        );
+      }
+    },
+    {
       key: 'created_at',
       header: 'تاريخ الإضافة',
       render: (member) => (
@@ -329,8 +358,15 @@ export const AdminPanel: React.FC = () => {
             {roleLabel[member.role]}
           </span>
         </div>
-        <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-55 dark:border-slate-800/50">
-          <span className="text-slate-400">تاريخ الإضافة: {new Date(member.created_at).toLocaleDateString('ar-SA')}</span>
+        <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-50 dark:border-slate-800/50">
+          <div className="flex items-center gap-2">
+            {member.gender && (
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-bold ${genderBadge[member.gender] || ''}`}>
+                {genderLabel[member.gender] || 'غير محدد'}
+              </span>
+            )}
+            <span className="text-slate-400">تاريخ الإضافة: {new Date(member.created_at).toLocaleDateString('ar-SA')}</span>
+          </div>
           <div className="flex gap-1.5">
             <button
               onClick={() => openStaffModal(member)}
@@ -356,7 +392,7 @@ export const AdminPanel: React.FC = () => {
   const tabs = [
     { id: 'plans' as AdminTab, label: 'خطط العضوية', icon: Award, count: plans.length },
     { id: 'coaches' as AdminTab, label: 'فريق المدربين', icon: Dumbbell, count: coaches.length },
-    ...(isAdmin ? [{ id: 'staff' as AdminTab, label: 'إدارة الموظفين', icon: Shield, count: staffList.length }] : []),
+    ...(canManageStaff ? [{ id: 'staff' as AdminTab, label: 'إدارة الموظفين', icon: Shield, count: staffList.length }] : []),
   ];
 
   return (
@@ -373,7 +409,7 @@ export const AdminPanel: React.FC = () => {
           onClick={() => {
             if (activeTab === 'plans') openPlanModal();
             else if (activeTab === 'coaches') openCoachModal();
-            else if (activeTab === 'staff' && isAdmin) openStaffModal();
+            else if (activeTab === 'staff' && canManageStaff) openStaffModal();
           }}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition-all shadow-md shadow-emerald-500/10"
         >
@@ -483,7 +519,7 @@ export const AdminPanel: React.FC = () => {
                       )}
                       <div className="absolute top-3 right-3">
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-950/80 backdrop-blur-sm text-[10px] font-bold text-emerald-400 border border-slate-800">
-                          <Award className="h-3 w-3" />مدرب
+                          <Award className="h-3 w-3" />{coach.gender === 'female' ? 'مدربة' : 'مدرب'}
                         </span>
                       </div>
                       <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -512,8 +548,8 @@ export const AdminPanel: React.FC = () => {
       )}
 
       {/* ─── STAFF TAB ───────────────────────────────────────────────────────── */}
-      {activeTab === 'staff' && isAdmin && (
-        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs">
+      {activeTab === 'staff' && canManageStaff && (
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
           {staffLoading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-10 w-10 text-emerald-500 animate-spin" />
@@ -590,6 +626,19 @@ export const AdminPanel: React.FC = () => {
               className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
               placeholder="+970 5XX XXX XXXX" />
           </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">القسم (شباب / بنات)</label>
+            <div className="flex gap-2">
+              {(['male', 'female'] as const).map(g => (
+                <button key={g} type="button" onClick={() => setCoachGender(g)}
+                  className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                    coachGender === g ? (g === 'male' ? 'bg-blue-600 text-white shadow-sm border-transparent' : 'bg-pink-600 text-white shadow-sm border-transparent') : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }`}>
+                  {genderLabel[g]}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
             <button type="button" onClick={() => setIsCoachModalOpen(false)} className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer"><X className="h-3.5 w-3.5" />إلغاء</button>
             <button type="submit" disabled={coachSaving} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold rounded-xl text-xs transition-colors inline-flex items-center gap-2 cursor-pointer">
@@ -611,17 +660,50 @@ export const AdminPanel: React.FC = () => {
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2"><span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" />البريد الإلكتروني (لتسجيل الدخول)</span></label>
-            <input type="email" required value={staffEmail} onChange={e => setStaffEmail(e.target.value)}
-              className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              placeholder="example@hulkgym.com" />
+            <div className="flex gap-2">
+              <input type="email" required value={staffEmail} onChange={e => setStaffEmail(e.target.value)}
+                className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                placeholder="example@hulkgym.com" />
+              <button type="button" onClick={() => {
+                const { email, password } = generateCredentials(staffName);
+                setStaffEmail(email);
+                setStaffPassword(password);
+                addToast('success', `تم توليد: ${email} / ${password}`);
+              }}
+                disabled={!staffName.trim()}
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs transition-all whitespace-nowrap cursor-pointer"
+                title="توليد تلقائي من الاسم">
+                <Sparkles className="h-3.5 w-3.5" />توليد
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">
               <span className="flex items-center gap-1"><Lock className="h-3.5 w-3.5" />كلمة المرور{editingStaff && ' (اتركها فارغة للإبقاء على الحالية)'}</span>
             </label>
-            <input type="password" value={staffPassword} onChange={e => setStaffPassword(e.target.value)}
-              className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              placeholder="••••••••" />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input type={showPassword ? 'text' : 'password'} value={staffPassword} onChange={e => setStaffPassword(e.target.value)}
+                  className="block w-full px-4 py-2.5 pl-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  placeholder="••••••••" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
+                  title={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}>
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <button type="button" onClick={() => {
+                const { password } = generateCredentials(staffName);
+                setStaffPassword(password);
+                setShowPassword(true);
+                addToast('success', `تم توليد كلمة المرور: ${password}`);
+              }}
+                disabled={!staffName.trim()}
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs transition-all whitespace-nowrap cursor-pointer"
+                title="توليد تلقائي من الاسم">
+                <Sparkles className="h-3.5 w-3.5" />توليد
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2"><span className="flex items-center gap-1"><Shield className="h-3.5 w-3.5" />الدور والصلاحية</span></label>
@@ -632,6 +714,19 @@ export const AdminPanel: React.FC = () => {
                     staffRole === r ? 'bg-slate-900 dark:bg-emerald-600 text-white shadow-sm border-transparent' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                   }`}>
                   {roleLabel[r]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2"><span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />القسم (شباب / بنات)</span></label>
+            <div className="flex gap-2">
+              {(['male', 'female'] as const).map(g => (
+                <button key={g} type="button" onClick={() => setStaffGender(g)}
+                  className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                    staffGender === g ? (g === 'male' ? 'bg-blue-600 text-white shadow-sm border-transparent' : 'bg-pink-600 text-white shadow-sm border-transparent') : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }`}>
+                  {genderLabel[g]}
                 </button>
               ))}
             </div>

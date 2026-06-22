@@ -1,5 +1,6 @@
 import { db } from '../lib/firebase';
 import { collection, doc, setDoc, getDocs, query, where, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
+import type { StaffGender } from '../types';
 
 export interface StaffMember {
   id: string;
@@ -7,6 +8,7 @@ export interface StaffMember {
   email: string;
   password: string;
   role: 'admin' | 'manager' | 'staff';
+  gender?: StaffGender;
   created_at: string;
 }
 
@@ -22,6 +24,7 @@ export const staffService = {
         email: data.email,
         password: data.password,
         role: data.role,
+        gender: data.gender || undefined,
         created_at: data.created_at,
       };
     });
@@ -43,6 +46,7 @@ export const staffService = {
       email: member.email,
       password: member.password,
       role: member.role,
+      gender: member.gender || undefined,
       created_at: now,
     });
     
@@ -84,6 +88,7 @@ export const staffService = {
       email: data.email,
       password: data.password,
       role: data.role,
+      gender: data.gender || undefined,
       created_at: data.created_at,
     };
   },

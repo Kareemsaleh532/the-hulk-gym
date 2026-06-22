@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useGym } from '../context/GymContext';
-import { useMembers, useDeleteMember } from '../hooks/useMembers';
+import { useDeleteMember } from '../hooks/useMembers';
+import { useFilteredMembers } from '../hooks/useFilteredMembers';
+import { useAuth } from '../hooks/useAuth';
 import { Badge } from '../components/common/Badge';
 import { EmptyState } from '../components/common/EmptyState';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
@@ -11,13 +13,15 @@ import { Search, Filter, Plus, Trash2, Eye, ChevronLeft, ChevronRight, UserX } f
 
 export const Members: React.FC = () => {
   const { plans, setTab } = useGym();
-  const { members, loading: membersLoading } = useMembers();
+  const { members, loading: membersLoading } = useFilteredMembers();
   const { deleteMember } = useDeleteMember();
+  const { isAdmin, isManager } = useAuth();
 
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [planFilter, setPlanFilter] = useState('all');
+  const [genderFilter, setGenderFilter] = useState('all');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,15 +39,16 @@ export const Members: React.FC = () => {
 
       const matchesStatus = statusFilter === 'all' || member.status === statusFilter;
       const matchesPlan = planFilter === 'all' || member.planId === planFilter;
+      const matchesGender = genderFilter === 'all' || member.gender === genderFilter;
 
-      return matchesSearch && matchesStatus && matchesPlan;
+      return matchesSearch && matchesStatus && matchesPlan && matchesGender;
     });
-  }, [members, searchTerm, statusFilter, planFilter]);
+  }, [members, searchTerm, statusFilter, planFilter, genderFilter]);
 
   // Reset pagination on filter change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, planFilter]);
+  }, [searchTerm, statusFilter, planFilter, genderFilter]);
 
   // Pagination calculations
   const totalItems = filteredMembers.length;
@@ -60,9 +65,26 @@ export const Members: React.FC = () => {
   const confirmDelete = async () => {
     if (pendingDelete) {
       await deleteMember(pendingDelete.id);
+      setPendingDelete(null);
     }
   };
 
+  // Gender badge helper
+  const renderGenderBadge = (gender?: string) => {
+    const styles = gender === 'Male'
+      ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800'
+      : gender === 'Female'
+        ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/30 dark:text-pink-400 dark:border-pink-800'
+        : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700';
+    const label = gender === 'Male' ? 'شب' : gender === 'Female' ? 'بنت' : 'غير محدد';
+    return (
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg border text-xs font-bold ${styles}`}>
+        {label}
+      </span>
+    );
+  };
+
+  // Table columns with gender column for ResponsiveTable
   const columns = useMemo<TableColumn<any>[]>(() => [
     {
       key: 'name',
@@ -75,7 +97,7 @@ export const Members: React.FC = () => {
               {initials}
             </div>
             <div className="min-w-0">
-              <span className="block font-bold text-slate-800 dark:text-slate-205 truncate">
+              <span className="block font-bold text-slate-800 dark:text-slate-200 truncate">
                 {member.name}
               </span>
             </div>
@@ -93,10 +115,15 @@ export const Members: React.FC = () => {
       )
     },
     {
+      key: 'gender',
+      header: 'الجنس',
+      render: (member) => renderGenderBadge(member.gender)
+    },
+    {
       key: 'planId',
       header: 'خطة العضوية',
       render: (member) => (
-        <span className="font-bold text-slate-850 dark:text-slate-205 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2.5 py-1 rounded-lg">
+        <span className="font-bold text-slate-800 dark:text-slate-200 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2.5 py-1 rounded-lg">
           {getPlanName(member.planId, plans)}
         </span>
       )
@@ -123,34 +150,35 @@ export const Members: React.FC = () => {
         <div className="inline-flex items-center gap-2">
           <button
             onClick={() => setTab('member-details', member.id)}
-            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-450 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-100 dark:hover:border-indigo-900 transition-all focus:outline-none cursor-pointer"
+            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-100 dark:hover:border-indigo-900 transition-all focus:outline-none cursor-pointer"
             title="عرض التفاصيل"
           >
-            <Eye className="h-4.5 w-4.5" />
+            <Eye className="h-4 w-4" />
           </button>
           <button
             onClick={() => handleDelete(member.id, member.name)}
-            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-455 hover:text-rose-650 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:border-rose-100 dark:hover:border-rose-900 transition-all focus:outline-none cursor-pointer"
+            className="p-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:border-rose-100 dark:hover:border-rose-900 transition-all focus:outline-none cursor-pointer"
             title="حذف العضو"
           >
-            <Trash2 className="h-4.5 w-4.5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       )
     }
   ], [plans, setTab]);
 
+  // Mobile card with gender badge
   const renderMobileCard = (member: any) => {
     const initials = getInitials(member.name);
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 p-5 rounded-2xl shadow-xs space-y-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-xs select-none">
               {initials}
             </div>
             <div>
-              <span className="block font-bold text-slate-800 dark:text-slate-205">
+              <span className="block font-bold text-slate-800 dark:text-slate-200">
                 {member.name}
               </span>
               <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5 text-right">
@@ -161,30 +189,34 @@ export const Members: React.FC = () => {
           <Badge type={member.status} />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 py-3 border-y border-slate-50 dark:border-slate-800 text-xs">
+        <div className="grid grid-cols-3 gap-3 py-3 border-y border-slate-50 dark:border-slate-800 text-xs">
+          <div>
+            <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1">الجنس</span>
+            {renderGenderBadge(member.gender)}
+          </div>
           <div>
             <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1">خطة العضوية</span>
-            <span className="font-semibold text-slate-850 dark:text-slate-205">
+            <span className="font-semibold text-slate-800 dark:text-slate-200">
               {getPlanName(member.planId, plans)}
             </span>
           </div>
           <div>
             <span className="block text-slate-400 dark:text-slate-500 font-bold mb-1">تاريخ الانتهاء</span>
-            <span className="font-semibold text-slate-850 dark:text-slate-205">{member.endDate}</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{member.endDate}</span>
           </div>
         </div>
 
         <div className="flex justify-end gap-2">
           <button
             onClick={() => setTab('member-details', member.id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-305 text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-650 dark:hover:text-indigo-400 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer"
           >
             <Eye className="h-4 w-4" />
             <span>التفاصيل</span>
           </button>
           <button
             onClick={() => handleDelete(member.id, member.name)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-305 text-xs font-semibold hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-650 dark:hover:text-rose-400 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 transition-all cursor-pointer"
           >
             <Trash2 className="h-4 w-4" />
             <span>حذف</span>
@@ -270,6 +302,26 @@ export const Members: React.FC = () => {
               <Filter className="h-3.5 w-3.5" />
             </span>
           </div>
+
+          {/* Gender Filter — only for admin/manager who see all genders */}
+          {(isAdmin || isManager) && (
+            <div className="relative flex-1 sm:flex-none">
+              <select
+                id="gender-filter"
+                aria-label="تصفية الجنس"
+                value={genderFilter}
+                onChange={(e) => setGenderFilter(e.target.value)}
+                className="block w-full sm:w-44 pl-3 pr-8 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer appearance-none"
+              >
+                <option value="all">الكل (شباب + بنات)</option>
+                <option value="Male">شباب فقط</option>
+                <option value="Female">بنات فقط</option>
+              </select>
+              <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                <Filter className="h-3.5 w-3.5" />
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -291,14 +343,13 @@ export const Members: React.FC = () => {
         />
 
         {!membersLoading && totalItems > 0 && (
-          /* Pagination Controls */
           <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30 mt-4">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              عرض <span className="font-bold text-slate-800 dark:text-slate-205">{(currentPage - 1) * itemsPerPage + 1}</span> إلى{' '}
-              <span className="font-bold text-slate-800 dark:text-slate-205">
+              عرض <span className="font-bold text-slate-800 dark:text-slate-200">{(currentPage - 1) * itemsPerPage + 1}</span> إلى{' '}
+              <span className="font-bold text-slate-800 dark:text-slate-200">
                 {Math.min(currentPage * itemsPerPage, totalItems)}
               </span>{' '}
-              من <span className="font-bold text-slate-800 dark:text-slate-205">{totalItems}</span> عضو
+              من <span className="font-bold text-slate-800 dark:text-slate-200">{totalItems}</span> عضو
             </span>
 
             <div className="inline-flex gap-1.5">
@@ -307,7 +358,7 @@ export const Members: React.FC = () => {
                 aria-label="الصفحة السابقة"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((c) => Math.max(c - 1, 1))}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 disabled:hover:text-slate-500 transition-all focus:outline-none cursor-pointer"
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-all focus:outline-none cursor-pointer"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -319,7 +370,7 @@ export const Members: React.FC = () => {
                   className={`px-3 py-1 rounded-lg border text-xs font-bold transition-all focus:outline-none cursor-pointer ${
                     currentPage === page
                       ? 'bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:border-slate-100 dark:text-slate-900 shadow-xs'
-                      : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-205'
+                      : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200'
                   }`}
                 >
                   {page}
@@ -331,7 +382,7 @@ export const Members: React.FC = () => {
                 aria-label="الصفحة التالية"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((c) => Math.min(c + 1, totalPages))}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-205 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 disabled:hover:text-slate-500 transition-all focus:outline-none cursor-pointer"
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-all focus:outline-none cursor-pointer"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>

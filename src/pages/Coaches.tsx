@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useGym } from '../context/GymContext';
-import { useMembers } from '../hooks/useMembers';
+import { useFilteredMembers } from '../hooks/useFilteredMembers';
+import { useAuth } from '../hooks/useAuth';
 import { usePayments } from '../hooks/usePayments';
 import { Modal } from '../components/common/Modal';
 import { Badge } from '../components/common/Badge';
@@ -10,20 +11,22 @@ import { formatCurrency, getPlanName } from '../utils/helpers';
 
 export const Coaches: React.FC = () => {
   const { coaches, plans } = useGym();
-  const { members } = useMembers();
+  const { filterCoachesByAccess } = useAuth();
+  const { members } = useFilteredMembers();
   const { payments } = usePayments();
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
 
-  // Memoized coach list with client-computed member counts to avoid N+1 query overhead
+  // Filter coaches by gender then compute member counts
   const coachesWithCounts = useMemo(() => {
-    return coaches.map(coach => {
+    const filtered = filterCoachesByAccess(coaches);
+    return filtered.map(coach => {
       const assignedCount = members.filter(m => m.coachId === coach.id).length;
       return {
         ...coach,
         assignedMembersCount: assignedCount
       };
     });
-  }, [coaches, members]);
+  }, [coaches, members, filterCoachesByAccess]);
 
   // Selected coach with client-computed count
   const selectedCoachWithCount = useMemo(() => {

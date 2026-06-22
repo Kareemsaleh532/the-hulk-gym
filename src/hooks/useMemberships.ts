@@ -47,3 +47,24 @@ export const useRenewMembership = () => {
 
   return { renewMembership, loading, error };
 };
+
+export const useWithdrawMembership = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const withdrawMembership = async (memberId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await membershipService.withdrawMembership(memberId);
+    } catch (err) {
+      const errorObj = err instanceof Error ? err : new Error('Failed to withdraw membership');
+      setError(errorObj);
+      throw errorObj;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { withdrawMembership, loading, error };
+};

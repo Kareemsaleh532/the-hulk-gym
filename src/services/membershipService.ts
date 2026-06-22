@@ -117,4 +117,100 @@ export const membershipService = {
 
     await batch.commit();
   },
+
+  async withdrawMembership(memberId: string): Promise<void> {
+    const now = new Date().toISOString();
+    const todayStr = now.split('T')[0];
+    const currentAdminStr = localStorage.getItem('hulk_v2_admin');
+    const operator = currentAdminStr ? JSON.parse(currentAdminStr).name : 'System';
+
+    // Get active membership
+    const membershipsRef = collection(db, 'memberships');
+    const activeQuery = query(membershipsRef, where('member_id', '==', memberId));
+    const activeSnapshot = await getDocs(activeQuery);
+    
+    const activeDoc = activeSnapshot.docs.find(doc => {
+      const data = doc.data();
+      return data.status === 'active' || data.status === 'expiring';
+    });
+
+    if (!activeDoc) {
+      throw new Error('No active membership found to withdraw from');
+    }
+
+    const membershipData = activeDoc.data();
+
+    // calculate refund
+    const start = new Date(membershipData.start_date);
+    const end = new Date(membershipData.end_date);
+    const today = new Date(todayStr);
+
+    let refundAmount = 0;
+    const price = Number(membershipData.price || 0);
+
+    if (today <= start) {
+       refundAmount = price;
+    } else if (today >= end) {
+       refundAmount = 0;
+    } else {
+       const totalDays = (end.getTime() - start.getTime()) / (1000 * 3600 * 24);
+       const daysUsed = (today.getTime() - start.getTime()) / (1000 * 3600 * 24);
+       const dailyRate = price / totalDays;
+       refundAmount = price - (dailyRate * daysUsed);
+    }
+    
+    // Ensure refund is rounded to 2 decimal places
+    refundAmount = Math.max(0, Math.round(refundAmount * 100) / 100);
+
+    const batch = writeBatch(db);
+
+    // Update membership status to expired and end_date to today
+    batch.update(activeDoc.ref, { 
+      status: 'expired',
+      end_date: todayStr
+    });
+
+    // Update member status
+    const memberRef = doc(db, 'members', memberId);
+    batch.update(memberRef, {
+      status: 'expired',
+      end_date: todayStr
+    });
+
+    if (refundAmount > 0) {
+      const memberDoc = await getDoc(memberRef);
+      const memberData = memberDoc.data();
+      const memberName = memberData?.full_name || 'عضو';
+
+      // Insert negative payment to represent refund
+      const paymentId = crypto.randomUUID();
+      const paymentRef = doc(db, 'payments', paymentId);
+      batch.set(paymentRef, {
+        member_id: memberId,
+        member_name: memberName,
+        amount: -refundAmount,
+        payment_method: 'Cash',
+        payment_date: todayStr,
+        payment_status: 'paid',
+        notes: `انسحاب من الاشتراك - مبلغ مسترد`,
+        created_at: now,
+      });
+
+      // Insert transaction
+      const txId = `tx-${crypto.randomUUID().slice(0, 8)}`;
+      const txRef = doc(db, 'transactions', txId);
+      batch.set(txRef, {
+        type: 'expense',
+        category: 'membership',
+        amount: refundAmount,
+        date: todayStr,
+        description: `مبلغ مسترد لانسحاب: ${memberName}`,
+        reference_id: paymentId,
+        created_by: operator,
+        created_at: now,
+      });
+    }
+
+    await batch.commit();
+  },
 };

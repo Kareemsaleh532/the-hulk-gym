@@ -1,8 +1,9 @@
 // AddMember page with dark mode support and no email field
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGym } from '../context/GymContext';
 import { useCreateMember } from '../hooks/useMembers';
 import { useCoaches } from '../hooks/useCoaches';
+import { useAuth } from '../hooks/useAuth';
 import type { GenderType, Payment } from '../types';
 import { Save, X, Info, Loader2 } from 'lucide-react';
 
@@ -10,11 +11,20 @@ export const AddMember: React.FC = () => {
   const { plans, setTab, addToast } = useGym();
   const { createMember, loading } = useCreateMember();
   const { coaches } = useCoaches();
+  const { allowedGenders, filterCoachesByAccess } = useAuth();
+
 
   // Form states
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [gender, setGender] = useState<GenderType>('Male');
+  const [gender, setGender] = useState<GenderType>(allowedGenders[0] || 'Male');
+
+  // Auto-set gender if staff is restricted to a single gender
+  useEffect(() => {
+    if (allowedGenders.length === 1) {
+      setGender(allowedGenders[0]);
+    }
+  }, [allowedGenders]);
   const [dob, setDob] = useState('1995-01-01');
   const [coachId, setCoachId] = useState('');
   const [planId, setPlanId] = useState(plans[0]?.id || 'plan-basic');
@@ -126,20 +136,26 @@ export const AddMember: React.FC = () => {
                   الجنس
                 </label>
                 <div className="flex gap-2">
-                  {(['Male', 'Female', 'Other'] as GenderType[]).map((opt) => (
+                  {(['Male', 'Female', 'Other'] as GenderType[]).map((opt) => {
+                    const isAllowed = allowedGenders.includes(opt);
+                    return (
                     <button
                       key={opt}
                       type="button"
-                      onClick={() => setGender(opt)}
+                      onClick={() => isAllowed && setGender(opt)}
+                      disabled={!isAllowed}
                       className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${
-                        gender === opt
-                          ? 'bg-slate-900 border-slate-900 text-white'
-                          : 'bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-600 text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+                        !isAllowed
+                          ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-50'
+                          : gender === opt
+                            ? 'bg-slate-900 border-slate-900 text-white'
+                            : 'bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-600 text-slate-600 hover:bg-slate-100 hover:text-slate-800'
                       }`}
                     >
                       {genderLabels[opt]}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -171,7 +187,7 @@ export const AddMember: React.FC = () => {
                   className="block w-full px-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-250 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
                 >
                   <option value="">-- بدون مدرب --</option>
-                  {coaches.map(coach => (
+                  {filterCoachesByAccess(coaches).map(coach => (
                     <option key={coach.id} value={coach.id}>{coach.name} - {coach.specialty}</option>
                   ))}
                 </select>

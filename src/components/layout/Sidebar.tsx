@@ -1,5 +1,6 @@
 import React from 'react';
 import { useGym } from '../../context/GymContext';
+import { useAuth } from '../../hooks/useAuth';
 import {
   LayoutDashboard,
   Users,
@@ -21,6 +22,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { activeTab, setTab, logout, currentAdmin } = useGym();
+  const { canViewAccounting, canViewAdminPanel } = useAuth();
 
   const navigationItems = [
     { id: 'dashboard', name: 'لوحة التحكم', icon: LayoutDashboard },
@@ -28,12 +30,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { id: 'memberships', name: 'خطط العضوية', icon: Award },
     { id: 'payments', name: 'سجل المدفوعات', icon: DollarSign },
     { id: 'coaches', name: 'فريق المدربين', icon: UserCheck },
-    ...(currentAdmin?.role === 'admin' || currentAdmin?.role === 'manager' 
-      ? [
-          { id: 'accounting', name: 'المحاسبة والمالية', icon: Wallet },
-          { id: 'admin', name: 'إدارة النظام', icon: ShieldCheck }
-        ] 
-      : []),
+    ...(canViewAccounting ? [{ id: 'accounting', name: 'المحاسبة والمالية', icon: Wallet }] : []),
+    ...(canViewAdminPanel ? [{ id: 'admin', name: 'إدارة النظام', icon: ShieldCheck }] : []),
     { id: 'settings', name: 'إعدادات البوابة', icon: Settings },
   ];
 
