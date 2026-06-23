@@ -624,7 +624,7 @@ export const AdminPanel: React.FC = () => {
             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">رقم الهاتف</label>
             <input type="tel" value={coachPhone} onChange={e => setCoachPhone(e.target.value)}
               className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              placeholder="+970 5XX XXX XXXX" />
+              placeholder="059XXXXXXX أو 056XXXXXXX" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">القسم (شباب / بنات)</label>

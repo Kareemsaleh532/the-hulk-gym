@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير نظام إدارة The Hulk Gym</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap');
+        
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+            direction: rtl;
+            text-align: right;
+            color: #1a1a2e;
+            line-height: 1.9;
+            font-size: 14px;
+            background: #f8f9fa;
+            padding: 0;
+        }
+
+        /* ===== COVER PAGE ===== */
+        .cover-page {
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+        }
+
+        .cover-page::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,215,0,0.08) 0%, transparent 60%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .cover-logo {
+            font-size: 80px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-title {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 2px;
+        }
+
+        .cover-subtitle {
+            font-size: 26px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-divider {
+            width: 200px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #FFD700, transparent);
+            margin: 20px auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-info {
+            position: relative;
+            z-index: 1;
+            margin-top: 30px;
+        }
+
+        .cover-info p {
+            font-size: 16px;
+            color: #b0b0b0;
+            margin: 8px 0;
+        }
+
+        .cover-info .label {
+            color: #FFD700;
+            font-weight: 700;
+        }
+
+        .cover-engineers {
+            position: relative;
+            z-index: 1;
+            margin-top: 40px;
+            padding: 25px 50px;
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .cover-engineers h3 {
+            color: #FFD700;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .cover-engineers p {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 5px 0;
+        }
+
+        .cover-date {
+            position: relative;
+            z-index: 1;
+            margin-top: 40px;
+            font-size: 15px;
+            color: #888;
+        }
+
+        /* ===== CONTENT PAGES ===== */
+        .content {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px 60px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.08);
+        }
+
+        /* ===== TABLE OF CONTENTS ===== */
+        .toc {
+            page-break-after: always;
+            padding: 40px 0;
+        }
+
+        .toc h2 {
+            font-size: 32px;
+            color: #302b63;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .toc h2::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #FFD700, #302b63);
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .toc-list li {
+            padding: 12px 20px;
+            border-bottom: 1px dashed #e0e0e0;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .toc-list li:hover {
+            background: #f8f8ff;
+        }
+
+        .toc-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #302b63, #24243e);
+            color: #FFD700;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 700;
+            margin-left: 15px;
+        }
+
+        /* ===== SECTION HEADERS ===== */
+        .section {
+            margin-bottom: 50px;
+            page-break-inside: avoid;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid;
+            border-image: linear-gradient(90deg, #302b63, #FFD700) 1;
+        }
+
+        .section-icon {
+            font-size: 36px;
+        }
+
+        .section h2 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #302b63;
+        }
+
+        .section h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #24243e;
+            margin: 25px 0 12px;
+            padding-right: 15px;
+            border-right: 4px solid #FFD700;
+        }
+
+        .section h4 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #555;
+            margin: 18px 0 8px;
+        }
+
+        .section p {
+            margin-bottom: 12px;
+            text-align: justify;
+            color: #333;
+        }
+
+        /* ===== TABLES ===== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        thead {
+            background: linear-gradient(135deg, #302b63, #24243e);
+        }
+
+        thead th {
+            color: #FFD700;
+            padding: 14px 18px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8f8ff;
+        }
+
+        tbody tr:hover {
+            background: #efefff;
+        }
+
+        tbody td {
+            padding: 12px 18px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* ===== FEATURE CARDS ===== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f8f8ff 0%, #ffffff 100%);
+            border: 1px solid #e8e8f0;
+            border-radius: 12px;
+            padding: 22px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(48,43,99,0.12);
+        }
+
+        .feature-card .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .feature-card h4 {
+            color: #302b63;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 8px;
+            border: none;
+            padding: 0;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        /* ===== HIGHLIGHT BOXES ===== */
+        .highlight-box {
+            background: linear-gradient(135deg, #f0f0ff 0%, #faf8ff 100%);
+            border-right: 5px solid #302b63;
+            border-radius: 0 10px 10px 0;
+            padding: 20px 25px;
+            margin: 20px 0;
+        }
+
+        .highlight-box.gold {
+            border-right-color: #FFD700;
+            background: linear-gradient(135deg, #fffdf0 0%, #fff9e6 100%);
+        }
+
+        .highlight-box.green {
+            border-right-color: #2ecc71;
+            background: linear-gradient(135deg, #f0fff5 0%, #e8fef0 100%);
+        }
+
+        .highlight-box.red {
+            border-right-color: #e74c3c;
+            background: linear-gradient(135deg, #fff5f5 0%, #fee8e8 100%);
+        }
+
+        .highlight-box h4 {
+            color: #302b63;
+            margin: 0 0 8px;
+            border: none;
+            padding: 0;
+        }
+
+        /* ===== LISTS ===== */
+        ul, ol {
+            padding-right: 25px;
+            margin: 10px 0 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            padding-right: 5px;
+        }
+
+        li::marker {
+            color: #302b63;
+        }
+
+        /* ===== FLOW DIAGRAM ===== */
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin: 25px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            position: relative;
+        }
+
+        .flow-step-number {
+            min-width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #302b63, #24243e);
+            color: #FFD700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .flow-step-content {
+            flex: 1;
+            padding: 12px 0 30px;
+        }
+
+        .flow-step-content h4 {
+            margin: 0 0 5px;
+            color: #302b63;
+            border: none;
+            padding: 0;
+        }
+
+        .flow-step-content p {
+            color: #666;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .flow-step::before {
+            content: '';
+            position: absolute;
+            right: 22px;
+            top: 45px;
+            width: 2px;
+            height: calc(100% - 45px);
+            background: linear-gradient(180deg, #302b63, #e0e0e0);
+        }
+
+        .flow-step:last-child::before {
+            display: none;
+        }
+
+        /* ===== STATS BAR ===== */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 25px 15px;
+            background: linear-gradient(135deg, #302b63, #24243e);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .stat-item .stat-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .stat-item .stat-label {
+            font-size: 14px;
+            color: #b0b0d0;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stat-item .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: #FFD700;
+        }
+
+        /* ===== ROLES SECTION ===== */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .role-card {
+            text-align: center;
+            padding: 25px 15px;
+            border-radius: 12px;
+            border: 2px solid;
+        }
+
+        .role-card.owner {
+            border-color: #FFD700;
+            background: linear-gradient(135deg, #fffdf0 0%, #fff9e6 100%);
+        }
+
+        .role-card.admin {
+            border-color: #302b63;
+            background: linear-gradient(135deg, #f0f0ff 0%, #faf8ff 100%);
+        }
+
+        .role-card.staff {
+            border-color: #2ecc71;
+            background: linear-gradient(135deg, #f0fff5 0%, #e8fef0 100%);
+        }
+
+        .role-card .role-icon {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .role-card h4 {
+            font-size: 18px;
+            margin: 0 0 5px;
+            border: none;
+            padding: 0;
+        }
+
+        .role-card .role-ar {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .role-card ul {
+            text-align: right;
+            font-size: 13px;
+            padding-right: 20px;
+        }
+
+        /* ===== FOOTER ===== */
+        .report-footer {
+            margin-top: 60px;
+            padding-top: 25px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .report-footer .footer-brand {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #302b63, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        /* ===== PAGE BREAKS ===== */
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* ===== BADGE ===== */
+        .badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .badge-gold { background: #FFF3CD; color: #856404; }
+        .badge-green { background: #D4EDDA; color: #155724; }
+        .badge-blue { background: #D1ECF1; color: #0C5460; }
+        .badge-red { background: #F8D7DA; color: #721C24; }
+        .badge-purple { background: #E8E0F0; color: #302b63; }
+
+        /* ===== PAYMENT METHODS ===== */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .payment-method {
+            text-align: center;
+            padding: 20px 10px;
+            border-radius: 10px;
+            background: #f8f8ff;
+            border: 1px solid #e8e8f0;
+        }
+
+        .payment-method .pm-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .payment-method .pm-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #302b63;
+        }
+
+        @media print {
+            body { background: white; }
+            .content { box-shadow: none; padding: 0; }
+            .feature-card:hover { transform: none; box-shadow: none; }
+            .cover-page { min-height: 100vh; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== COVER PAGE ==================== -->
+<div class="cover-page">
+    <div class="cover-logo">🏋️‍♂️</div>
+    <div class="cover-title">THE HULK GYM</div>
+    <div class="cover-subtitle">نظام إدارة الجيم المتكامل</div>
+    <div class="cover-divider"></div>
+    <p style="font-size: 18px; color: #ccc; position: relative; z-index: 1;">
+        تقرير شامل عن النظام الإلكتروني لإدارة صالة الألعاب الرياضية
+    </p>
+
+    <div class="cover-engineers">
+        <h3>🛠️ المهندسون المشرفون على المشروع</h3>
+        <p>م. كريم صالح</p>
+        <p>م. مؤمن حجازي</p>
+    </div>
+
+    <div class="cover-info">
+        <p><span class="label">الإصدار:</span> 1.0</p>
+        <p><span class="label">التاريخ:</span> يونيو 2026</p>
+        <p><span class="label">نوع المستند:</span> تقرير تعريفي شامل</p>
+    </div>
+</div>
+
+<!-- ==================== TABLE OF CONTENTS ==================== -->
+<div class="content">
+    <div class="toc">
+        <h2>📋 فهرس المحتويات</h2>
+        <ul class="toc-list">
+            <li>
+                <span><span class="toc-number">1</span> مقدمة عن النظام</span>
+            </li>
+            <li>
+                <span><span class="toc-number">2</span> نظرة عامة على مكونات النظام</span>
+            </li>
+            <li>
+                <span><span class="toc-number">3</span> إدارة الأعضاء والاشتراكات</span>
+            </li>
+            <li>
+                <span><span class="toc-number">4</span> نظام المدفوعات والمحاسبة</span>
+            </li>
+            <li>
+                <span><span class="toc-number">5</span> إدارة المدربين</span>
+            </li>
+            <li>
+                <span><span class="toc-number">6</span> لوحة التحكم والإحصائيات</span>
+            </li>
+            <li>
+                <span><span class="toc-number">7</span> نظام الصلاحيات والمستخدمين</span>
+            </li>
+            <li>
+                <span><span class="toc-number">8</span> نظام التنبيهات والإشعارات</span>
+            </li>
+            <li>
+                <span><span class="toc-number">9</span> الإعدادات والتخصيص</span>
+            </li>
+            <li>
+                <span><span class="toc-number">10</span> الأمان وحماية البيانات</span>
+            </li>
+            <li>
+                <span><span class="toc-number">11</span> البنية التقنية (ملخص)</span>
+            </li>
+            <li>
+                <span><span class="toc-number">12</span> خطة التطوير المستقبلية</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- ==================== 1. INTRODUCTION ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">📖</span>
+            <h2>1. مقدمة عن النظام</h2>
+        </div>
+
+        <p>
+            نظام <strong>The Hulk Gym</strong> هو نظام إلكتروني متكامل تم تصميمه وتطويره خصيصاً لإدارة صالة الألعاب الرياضية بشكل احترافي وسلس. يهدف النظام إلى تحويل جميع العمليات اليومية من الطريقة التقليدية (الورقية) إلى نظام رقمي ذكي يُمكّن أصحاب الجيم والموظفين من إدارة كل شيء من مكان واحد.
+        </p>
+
+        <div class="highlight-box gold">
+            <h4>💡 لماذا تم بناء هذا النظام؟</h4>
+            <p>
+                لأن إدارة الجيم تتطلب متابعة يومية دقيقة لعشرات العمليات: تسجيل أعضاء جدد، متابعة الاشتراكات، تحصيل المدفوعات، إدارة المدربين، ومراقبة الإيرادات والمصروفات. بدون نظام إلكتروني، هذه العمليات معرضة للأخطاء والنسيان وضياع البيانات.
+            </p>
+        </div>
+
+        <h3>أهداف النظام الرئيسية</h3>
+        <ul>
+            <li><strong>تسهيل العمليات اليومية:</strong> تسجيل الأعضاء وإدارة اشتراكاتهم بضغطة زر</li>
+            <li><strong>ضبط المالية:</strong> تتبع كل شيكل داخل وخارج — إيرادات ومصروفات</li>
+            <li><strong>متابعة الاشتراكات:</strong> تنبيهات تلقائية عند اقتراب انتهاء الاشتراك أو تجميده</li>
+            <li><strong>تنظيم العمل:</strong> كل موظف له صلاحياته المحددة حسب دوره</li>
+            <li><strong>اتخاذ قرارات مبنية على بيانات:</strong> تقارير وإحصائيات لحظية عن أداء الجيم</li>
+            <li><strong>حماية البيانات:</strong> نظام أمان متكامل لحماية بيانات الأعضاء والمعاملات المالية</li>
+        </ul>
+
+        <h3>مميزات النظام</h3>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon">🌐</div>
+                <h4>يعمل من أي مكان</h4>
+                <p>النظام يعمل عبر الإنترنت من أي جهاز — كمبيوتر أو موبايل أو تابلت — بدون تثبيت أي برنامج</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🇵🇸</div>
+                <h4>واجهة عربية بالكامل</h4>
+                <p>تم تصميم النظام بالكامل باللغة العربية مع دعم الشيكل كعملة وأرقام الهواتف الفلسطينية والإسرائيلية</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">⚡</div>
+                <h4>سريع وسلس</h4>
+                <p>يعمل بسرعة عالية بدون تحميل صفحات — تجربة استخدام حديثة ومريحة</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔒</div>
+                <h4>آمن ومحمي</h4>
+                <p>نظام تسجيل دخول آمن مع صلاحيات لكل موظف — بياناتك في أمان تام</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 2. SYSTEM OVERVIEW ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">🗺️</span>
+            <h2>2. نظرة عامة على مكونات النظام</h2>
+        </div>
+
+        <p>
+            يتكون النظام من عدة أقسام رئيسية، كل قسم يتعامل مع جانب معين من إدارة الجيم. يمكن الوصول لكل قسم من القائمة الجانبية في النظام:
+        </p>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-icon">📊</div>
+                <span class="stat-label">عدد الأقسام</span>
+                <span class="stat-value">12 قسم</span>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">👥</div>
+                <span class="stat-label">أنواع المستخدمين</span>
+                <span class="stat-value">3 أدوار</span>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">💳</div>
+                <span class="stat-label">طرق الدفع</span>
+                <span class="stat-value">4 طرق</span>
+            </div>
+        </div>
+
+        <h3>خريطة أقسام النظام</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>الرمز</th>
+                    <th>القسم</th>
+                    <th>الوصف</th>
+                    <th>المتاح لـ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>📊</td>
+                    <td>لوحة التحكم</td>
+                    <td>إحصائيات عامة ونظرة شاملة على أداء الجيم</td>
+                    <td><span class="badge badge-purple">الجميع</span></td>
+                </tr>
+                <tr>
+                    <td>👥</td>
+                    <td>الأعضاء</td>
+                    <td>قائمة جميع أعضاء الجيم مع البحث والتصفية</td>
+                    <td><span class="badge badge-purple">الجميع</span></td>
+                </tr>
+                <tr>
+                    <td>➕</td>
+                    <td>إضافة عضو</td>
+                    <td>تسجيل عضو جديد مع اشتراك اختياري</td>
+                    <td><span class="badge badge-purple">الجميع</span></td>
+                </tr>
+                <tr>
+                    <td>📋</td>
+                    <td>تفاصيل العضو</td>
+                    <td>الملف الكامل للعضو: بياناته، اشتراكاته، مدفوعاته</td>
+                    <td><span class="badge badge-purple">الجميع</span></td>
+                </tr>
+                <tr>
+                    <td>🏷️</td>
+                    <td>الاشتراكات</td>
+                    <td>إدارة خطط الاشتراك وحالاتها (نشط/منتهي/مجمد)</td>
+                    <td><span class="badge badge-blue">مدير فأعلى</span></td>
+                </tr>
+                <tr>
+                    <td>💰</td>
+                    <td>المدفوعات</td>
+                    <td>تسجيل وتتبع جميع المدفوعات</td>
+                    <td><span class="badge badge-blue">مدير فأعلى</span></td>
+                </tr>
+                <tr>
+                    <td>📈</td>
+                    <td>المحاسبة</td>
+                    <td>التقارير المالية: إيرادات، مصروفات، صافي الأرباح</td>
+                    <td><span class="badge badge-gold">المالك فقط</span></td>
+                </tr>
+                <tr>
+                    <td>🏋️</td>
+                    <td>المدربين</td>
+                    <td>إدارة المدربين: بياناتهم، رواتبهم، جداولهم</td>
+                    <td><span class="badge badge-blue">مدير فأعلى</span></td>
+                </tr>
+                <tr>
+                    <td>⚙️</td>
+                    <td>لوحة الإدارة</td>
+                    <td>إدارة الموظفين وصلاحياتهم</td>
+                    <td><span class="badge badge-gold">المالك فقط</span></td>
+                </tr>
+                <tr>
+                    <td>🔧</td>
+                    <td>الإعدادات</td>
+                    <td>إعدادات الجيم العامة والتخصيص</td>
+                    <td><span class="badge badge-blue">مدير فأعلى</span></td>
+                </tr>
+                <tr>
+                    <td>🔔</td>
+                    <td>التنبيهات</td>
+                    <td>إشعارات الاشتراكات المنتهية والمدفوعات المتأخرة</td>
+                    <td><span class="badge badge-purple">الجميع</span></td>
+                </tr>
+                <tr>
+                    <td>🔐</td>
+                    <td>تسجيل الدخول</td>
+                    <td>شاشة الدخول للنظام بالبريد الإلكتروني وكلمة المرور</td>
+                    <td><span class="badge badge-purple">الجميع</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ==================== 3. MEMBERS & MEMBERSHIPS ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">👥</span>
+            <h2>3. إدارة الأعضاء والاشتراكات</h2>
+        </div>
+
+        <p>
+            هذا هو القسم الأهم في النظام — كل شيء يدور حول الأعضاء. يوفر النظام إدارة شاملة لكل ما يتعلق بالعضو من لحظة تسجيله حتى انتهاء اشتراكه.
+        </p>
+
+        <h3>3.1 تسجيل عضو جديد</h3>
+        <p>عند تسجيل عضو جديد، يتم جمع البيانات التالية:</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>البيان</th>
+                    <th>الوصف</th>
+                    <th>مطلوب؟</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>الاسم الكامل</td>
+                    <td>اسم العضو بالكامل</td>
+                    <td><span class="badge badge-red">مطلوب</span></td>
+                </tr>
+                <tr>
+                    <td>رقم الهاتف</td>
+                    <td>رقم فلسطيني (059/056) أو إسرائيلي (050/052/053/054/058) — 10 أرقام</td>
+                    <td><span class="badge badge-red">مطلوب</span></td>
+                </tr>
+                <tr>
+                    <td>النوع</td>
+                    <td>ذكر أو أنثى</td>
+                    <td><span class="badge badge-red">مطلوب</span></td>
+                </tr>
+                <tr>
+                    <td>تاريخ الميلاد</td>
+                    <td>لمعرفة عمر العضو</td>
+                    <td>اختياري</td>
+                </tr>
+                <tr>
+                    <td>الرقم القومي</td>
+                    <td>للتوثيق والتحقق</td>
+                    <td>اختياري</td>
+                </tr>
+                <tr>
+                    <td>جهة اتصال طوارئ</td>
+                    <td>اسم ورقم شخص للطوارئ</td>
+                    <td>اختياري</td>
+                </tr>
+                <tr>
+                    <td>ملاحظات طبية</td>
+                    <td>أي حالات صحية يجب مراعاتها</td>
+                    <td>اختياري</td>
+                </tr>
+                <tr>
+                    <td>صورة شخصية</td>
+                    <td>لتسهيل التعرف على العضو</td>
+                    <td>اختياري</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box green">
+            <h4>✅ ميزة ذكية</h4>
+            <p>
+                عند تسجيل عضو جديد، يمكن اختيار خطة اشتراك مباشرةً وتسجيل الدفعة — كل ذلك في خطوة واحدة بدلاً من ثلاث خطوات منفصلة!
+            </p>
+        </div>
+
+        <h3>3.2 سير عملية تسجيل عضو جديد</h3>
+        <div class="flow-steps">
+            <div class="flow-step">
+                <div class="flow-step-number">1</div>
+                <div class="flow-step-content">
+                    <h4>إدخال البيانات الأساسية</h4>
+                    <p>الموظف يدخل اسم العضو ورقم هاتفه ونوعه والبيانات الاختيارية</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="flow-step-number">2</div>
+                <div class="flow-step-content">
+                    <h4>اختيار خطة الاشتراك (اختياري)</h4>
+                    <p>يمكن اختيار خطة اشتراك من الخطط المتاحة وتحديد الخصم إن وُجد</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="flow-step-number">3</div>
+                <div class="flow-step-content">
+                    <h4>تسجيل الدفعة</h4>
+                    <p>تحديد المبلغ المدفوع وطريقة الدفع (كاش / فيزا / إنستاباي / فودافون كاش)</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="flow-step-number">4</div>
+                <div class="flow-step-content">
+                    <h4>حفظ وتأكيد</h4>
+                    <p>النظام يحفظ بيانات العضو والاشتراك والدفعة تلقائياً ويظهر رسالة تأكيد</p>
+                </div>
+            </div>
+        </div>
+
+        <h3>3.3 إدارة الأعضاء الحاليين</h3>
+        <p>صفحة الأعضاء توفر:</p>
+        <ul>
+            <li><strong>قائمة شاملة</strong> بجميع الأعضاء مع بياناتهم الأساسية</li>
+            <li><strong>بحث فوري</strong> بالاسم أو رقم الهاتف</li>
+            <li><strong>تصفية حسب الحالة:</strong> نشط / غير نشط / مجمد</li>
+            <li><strong>ملف العضو التفصيلي</strong> يعرض كل شيء عن العضو في صفحة واحدة</li>
+        </ul>
+
+        <h3>3.4 ملف العضو التفصيلي</h3>
+        <p>عند الضغط على أي عضو، يتم عرض ملف تفصيلي يحتوي على:</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon">📝</div>
+                <h4>البيانات الشخصية</h4>
+                <p>جميع بيانات العضو مع إمكانية التعديل</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🏷️</div>
+                <h4>تاريخ الاشتراكات</h4>
+                <p>جميع الاشتراكات السابقة والحالية مع حالاتها</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">💰</div>
+                <h4>سجل المدفوعات</h4>
+                <p>كل المدفوعات التي قام بها العضو</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">❄️</div>
+                <h4>عمليات التجميد</h4>
+                <p>تجميد الاشتراك وإلغاء التجميد مع تمديد المدة تلقائياً</p>
+            </div>
+        </div>
+
+        <h3>3.5 نظام الاشتراكات</h3>
+        <p>يدعم النظام إدارة كاملة لدورة حياة الاشتراك:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>الحالة</th>
+                    <th>الوصف</th>
+                    <th>الإجراءات المتاحة</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-green">نشط</span></td>
+                    <td>اشتراك ساري المفعول</td>
+                    <td>تجميد، إلغاء</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">منتهي</span></td>
+                    <td>انتهت صلاحية الاشتراك</td>
+                    <td>تجديد</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-blue">مجمد</span></td>
+                    <td>تم تجميد الاشتراك مؤقتاً</td>
+                    <td>إلغاء التجميد (يتم تمديد المدة تلقائياً)</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">ملغي</span></td>
+                    <td>تم إلغاء الاشتراك نهائياً</td>
+                    <td>لا يوجد</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <h4>❄️ كيف يعمل التجميد؟</h4>
+            <p>
+                عندما يتم تجميد اشتراك عضو، يتوقف حساب الأيام. عند إلغاء التجميد، يتم تمديد تاريخ انتهاء الاشتراك تلقائياً بعدد أيام التجميد. مثلاً: لو عضو جمّد اشتراكه 10 أيام، يتم إضافة 10 أيام لتاريخ الانتهاء.
+            </p>
+        </div>
+
+        <h3>3.6 خطط الاشتراك</h3>
+        <p>يمكن إنشاء خطط اشتراك متعددة بالمواصفات التالية:</p>
+        <ul>
+            <li><strong>اسم الخطة:</strong> مثل "شهري"، "ربع سنوي"، "سنوي"</li>
+            <li><strong>المدة:</strong> عدد الأيام (30 يوم، 90 يوم، 365 يوم، إلخ)</li>
+            <li><strong>السعر:</strong> بالشيكل</li>
+            <li><strong>المميزات:</strong> قائمة بمميزات كل خطة</li>
+            <li><strong>حد التجميد:</strong> عدد مرات التجميد المسموحة وأقصى عدد أيام</li>
+            <li><strong>حالة الخطة:</strong> نشطة أو معطلة</li>
+        </ul>
+    </div>
+
+    <!-- ==================== 4. PAYMENTS & ACCOUNTING ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">💰</span>
+            <h2>4. نظام المدفوعات والمحاسبة</h2>
+        </div>
+
+        <h3>4.1 تسجيل المدفوعات</h3>
+        <p>
+            كل عملية دفع يتم تسجيلها في النظام بشكل تفصيلي، مما يضمن الشفافية الكاملة ومتابعة كل شيكل.
+        </p>
+
+        <h4>طرق الدفع المدعومة</h4>
+        <div class="payment-methods">
+            <div class="payment-method">
+                <div class="pm-icon">💵</div>
+                <div class="pm-name">نقدي (كاش)</div>
+            </div>
+            <div class="payment-method">
+                <div class="pm-icon">💳</div>
+                <div class="pm-name">بطاقة ائتمان</div>
+            </div>
+            <div class="payment-method">
+                <div class="pm-icon">🏦</div>
+                <div class="pm-name">حوالة بنكية</div>
+            </div>
+            <div class="payment-method">
+                <div class="pm-icon">📱</div>
+                <div class="pm-name">دفع عبر الجوال</div>
+            </div>
+        </div>
+
+        <h4>بيانات كل عملية دفع</h4>
+        <ul>
+            <li>اسم العضو الذي دفع</li>
+            <li>الاشتراك المرتبط بالدفعة</li>
+            <li>المبلغ المدفوع</li>
+            <li>طريقة الدفع</li>
+            <li>تاريخ الدفع</li>
+            <li>اسم الموظف الذي استلم المبلغ</li>
+            <li>ملاحظات إضافية</li>
+        </ul>
+
+        <div class="highlight-box gold">
+            <h4>💡 ميزة تتبع المبالغ المتبقية</h4>
+            <p>
+                النظام يتتبع تلقائياً المبلغ المتبقي على كل اشتراك. إذا دفع العضو جزء من قيمة الاشتراك، يحسب النظام المبلغ المتبقي ويمكن تسجيل دفعات لاحقة.
+            </p>
+        </div>
+
+        <h3>4.2 نظام المحاسبة والتقارير المالية</h3>
+        <p>
+            قسم المحاسبة هو الأداة المالية الرئيسية لصاحب الجيم. يوفر رؤية شاملة ودقيقة عن الوضع المالي.
+        </p>
+
+        <h4>ما يوفره قسم المحاسبة:</h4>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon">📊</div>
+                <h4>تقارير الإيرادات</h4>
+                <p>إجمالي الإيرادات مقسمة حسب الفترة: يومي، أسبوعي، شهري، سنوي</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📉</div>
+                <h4>تتبع المصروفات</h4>
+                <p>تسجيل وتصنيف جميع مصروفات الجيم حسب النوع</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">💎</div>
+                <h4>صافي الأرباح</h4>
+                <p>حساب تلقائي للربح = الإيرادات - المصروفات</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📅</div>
+                <h4>تصفية بالتاريخ</h4>
+                <p>اختيار فترة زمنية محددة لعرض البيانات المالية</p>
+            </div>
+        </div>
+
+        <h4>تصنيفات المصروفات</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>التصنيف</th>
+                    <th>أمثلة</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>🏠 إيجار</td>
+                    <td>إيجار مكان الجيم</td>
+                </tr>
+                <tr>
+                    <td>👨‍💼 رواتب</td>
+                    <td>رواتب الموظفين والمدربين</td>
+                </tr>
+                <tr>
+                    <td>🔧 صيانة</td>
+                    <td>صيانة الأجهزة والمعدات</td>
+                </tr>
+                <tr>
+                    <td>🏋️ معدات</td>
+                    <td>شراء أجهزة ومعدات جديدة</td>
+                </tr>
+                <tr>
+                    <td>💡 مرافق</td>
+                    <td>كهرباء، مياه، غاز</td>
+                </tr>
+                <tr>
+                    <td>📢 تسويق</td>
+                    <td>إعلانات ودعاية</td>
+                </tr>
+                <tr>
+                    <td>📦 أخرى</td>
+                    <td>مصروفات متنوعة</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ==================== 5. COACHES ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">🏋️</span>
+            <h2>5. إدارة المدربين</h2>
+        </div>
+
+        <p>
+            يوفر النظام إدارة شاملة لفريق المدربين، بما في ذلك بياناتهم الشخصية، تخصصاتهم، رواتبهم، وعمولاتهم.
+        </p>
+
+        <h3>5.1 بيانات المدرب</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>البيان</th>
+                    <th>الوصف</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>الاسم</td>
+                    <td>اسم المدرب الكامل</td>
+                </tr>
+                <tr>
+                    <td>رقم الهاتف</td>
+                    <td>رقم التواصل</td>
+                </tr>
+                <tr>
+                    <td>التخصص</td>
+                    <td>مثل: لياقة بدنية، كمال أجسام، كروس فيت، إلخ</td>
+                </tr>
+                <tr>
+                    <td>الراتب</td>
+                    <td>الراتب الشهري الأساسي</td>
+                </tr>
+                <tr>
+                    <td>نوع العمولة</td>
+                    <td>نسبة مئوية أو مبلغ ثابت عن كل عضو</td>
+                </tr>
+                <tr>
+                    <td>الجدول</td>
+                    <td>مواعيد عمل المدرب</td>
+                </tr>
+                <tr>
+                    <td>تاريخ التعيين</td>
+                    <td>تاريخ بدء العمل في الجيم</td>
+                </tr>
+                <tr>
+                    <td>الحالة</td>
+                    <td>نشط أو غير نشط</td>
+                </tr>
+                <tr>
+                    <td>صورة شخصية</td>
+                    <td>لتسهيل التعرف</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>5.2 ربط المدربين بالأعضاء</h3>
+        <div class="highlight-box green">
+            <h4>✅ ميزة التخصيص</h4>
+            <p>
+                عند إنشاء اشتراك لعضو، يمكن تعيين مدرب خاص له. هذا يساعد في متابعة أداء المدرب ومعرفة عدد الأعضاء المسجلين مع كل مدرب.
+            </p>
+        </div>
+    </div>
+
+    <!-- ==================== 6. DASHBOARD ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">📊</span>
+            <h2>6. لوحة التحكم والإحصائيات</h2>
+        </div>
+
+        <p>
+            لوحة التحكم هي أول شاشة تظهر بعد تسجيل الدخول. توفر نظرة شاملة وسريعة على حالة الجيم من خلال أرقام وإحصائيات محدثة لحظياً.
+        </p>
+
+        <h3>6.1 الإحصائيات المعروضة</h3>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon">👥</div>
+                <h4>إجمالي الأعضاء</h4>
+                <p>عدد الأعضاء المسجلين في الجيم مع تصنيفهم (نشط/غير نشط)</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🏷️</div>
+                <h4>الاشتراكات النشطة</h4>
+                <p>عدد الاشتراكات السارية حالياً</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">💰</div>
+                <h4>إيرادات الشهر</h4>
+                <p>إجمالي المدفوعات المحصلة خلال الشهر الحالي</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">⚠️</div>
+                <h4>اشتراكات تنتهي قريباً</h4>
+                <p>أعضاء اشتراكاتهم ستنتهي خلال 7 أيام</p>
+            </div>
+        </div>
+
+        <h3>6.2 فوائد لوحة التحكم</h3>
+        <ul>
+            <li>معرفة حالة الجيم بنظرة واحدة بدون الحاجة لتصفح عدة صفحات</li>
+            <li>اتخاذ قرارات سريعة بناءً على البيانات الفعلية</li>
+            <li>اكتشاف المشاكل مبكراً (مثل عدد كبير من الاشتراكات المنتهية)</li>
+            <li>متابعة أداء الجيم المالي بشكل يومي</li>
+        </ul>
+    </div>
+
+    <!-- ==================== 7. ROLES & PERMISSIONS ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">🔑</span>
+            <h2>7. نظام الصلاحيات والمستخدمين</h2>
+        </div>
+
+        <p>
+            النظام مصمم بنظام صلاحيات متدرج يضمن أن كل موظف يرى ويفعل فقط ما يخصه. هذا يحمي البيانات الحساسة ويمنع الأخطاء.
+        </p>
+
+        <h3>7.1 أنواع المستخدمين</h3>
+        <div class="roles-grid">
+            <div class="role-card owner">
+                <div class="role-icon">👑</div>
+                <h4>المالك</h4>
+                <div class="role-ar">Owner</div>
+                <ul>
+                    <li>وصول كامل لكل شيء</li>
+                    <li>إدارة الموظفين</li>
+                    <li>التقارير المالية</li>
+                    <li>إعدادات النظام</li>
+                    <li>النسخ الاحتياطي</li>
+                </ul>
+            </div>
+            <div class="role-card admin">
+                <div class="role-icon">👨‍💼</div>
+                <h4>المدير</h4>
+                <div class="role-ar">Admin</div>
+                <ul>
+                    <li>إدارة الأعضاء</li>
+                    <li>إدارة الاشتراكات</li>
+                    <li>إدارة المدفوعات</li>
+                    <li>إدارة المدربين</li>
+                    <li>الإعدادات الأساسية</li>
+                </ul>
+            </div>
+            <div class="role-card staff">
+                <div class="role-icon">👤</div>
+                <h4>الموظف</h4>
+                <div class="role-ar">Staff</div>
+                <ul>
+                    <li>إدارة الأعضاء</li>
+                    <li>تسجيل أعضاء جدد</li>
+                    <li>عرض البيانات الأساسية</li>
+                    <li>صلاحيات محدودة</li>
+                    <li>—</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>7.2 الصلاحيات التفصيلية</h3>
+        <p>النظام يوفر تحكم دقيق في صلاحيات كل موظف:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>الصلاحية</th>
+                    <th>الوصف</th>
+                    <th>المالك</th>
+                    <th>المدير</th>
+                    <th>الموظف</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>إدارة الأعضاء</td>
+                    <td>إضافة وتعديل وحذف أعضاء</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                </tr>
+                <tr>
+                    <td>إدارة الاشتراكات</td>
+                    <td>إنشاء وتجميد وتجديد اشتراكات</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td>إدارة المدفوعات</td>
+                    <td>تسجيل وعرض المدفوعات</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td>إدارة المدربين</td>
+                    <td>إضافة وتعديل بيانات المدربين</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td>المحاسبة</td>
+                    <td>التقارير المالية والمصروفات</td>
+                    <td>✅</td>
+                    <td>❌</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td>الإعدادات</td>
+                    <td>إعدادات الجيم العامة</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td>عرض التقارير</td>
+                    <td>الاطلاع على التقارير والإحصائيات</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td>إدارة الموظفين</td>
+                    <td>إضافة وتعديل حسابات الموظفين</td>
+                    <td>✅</td>
+                    <td>❌</td>
+                    <td>❌</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>7.3 إدارة حسابات الموظفين</h3>
+        <div class="highlight-box gold">
+            <h4>🔑 إنشاء حسابات تلقائي</h4>
+            <p>
+                عند إضافة موظف جديد، النظام ينشئ تلقائياً بريد إلكتروني بصيغة:<br>
+                <strong style="direction: ltr; display: inline-block;">firstname.lastname@thehulkgym.com</strong><br>
+                وكلمة مرور عشوائية مكونة من 12 حرف. يمكن تغيير كلمة المرور لاحقاً.
+            </p>
+        </div>
+    </div>
+
+    <!-- ==================== 8. NOTIFICATIONS ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">🔔</span>
+            <h2>8. نظام التنبيهات والإشعارات</h2>
+        </div>
+
+        <p>
+            النظام يراقب تلقائياً حالة الاشتراكات والمدفوعات وينبه الموظفين عند الحاجة لاتخاذ إجراء. التنبيهات تظهر كأيقونة في القائمة الجانبية مع عدد التنبيهات غير المقروءة.
+        </p>
+
+        <h3>8.1 أنواع التنبيهات</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>النوع</th>
+                    <th>الأولوية</th>
+                    <th>الوصف</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>⏰ اشتراك يوشك على الانتهاء</td>
+                    <td><span class="badge badge-gold">متوسطة</span></td>
+                    <td>عضو اشتراكه سينتهي خلال 7 أيام — فرصة للتجديد</td>
+                </tr>
+                <tr>
+                    <td>🔴 اشتراك منتهي</td>
+                    <td><span class="badge badge-red">عالية</span></td>
+                    <td>عضو انتهى اشتراكه — يحتاج تجديد أو متابعة</td>
+                </tr>
+                <tr>
+                    <td>❄️ اشتراك مجمد</td>
+                    <td><span class="badge badge-blue">منخفضة</span></td>
+                    <td>عضو اشتراكه مجمد حالياً — للمتابعة</td>
+                </tr>
+                <tr>
+                    <td>💰 مبلغ متبقي</td>
+                    <td><span class="badge badge-gold">متوسطة</span></td>
+                    <td>عضو عليه مبلغ متبقي لم يدفعه بعد</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box green">
+            <h4>✅ تنبيهات ذكية تلقائية</h4>
+            <p>
+                التنبيهات تُحسب تلقائياً من بيانات النظام — لا تحتاج لأي تدخل يدوي. كل ما عليك فتح صفحة التنبيهات لرؤية ما يحتاج انتباهك.
+            </p>
+        </div>
+    </div>
+
+    <!-- ==================== 9. SETTINGS ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">⚙️</span>
+            <h2>9. الإعدادات والتخصيص</h2>
+        </div>
+
+        <p>
+            يتيح قسم الإعدادات تخصيص النظام ليتناسب مع احتياجات الجيم:
+        </p>
+
+        <h3>9.1 معلومات الجيم</h3>
+        <ul>
+            <li>اسم الجيم</li>
+            <li>رقم الهاتف</li>
+            <li>العنوان</li>
+            <li>شعار الجيم (اللوجو)</li>
+        </ul>
+
+        <h3>9.2 إعدادات الاشتراكات</h3>
+        <ul>
+            <li>الإعدادات الافتراضية لخطط الاشتراك</li>
+            <li>التحكم في سياسات التجميد</li>
+        </ul>
+
+        <h3>9.3 إعدادات التنبيهات</h3>
+        <ul>
+            <li>تفعيل أو تعطيل أنواع التنبيهات المختلفة</li>
+            <li>تحديد مدة التنبيه قبل انتهاء الاشتراك</li>
+        </ul>
+
+        <h3>9.4 إعدادات النظام</h3>
+        <ul>
+            <li>اللغة (العربية)</li>
+            <li>المظهر (ثيم النظام)</li>
+            <li>تنسيق التاريخ</li>
+        </ul>
+
+        <div class="highlight-box red">
+            <h4>⚠️ ملاحظة مهمة</h4>
+            <p>
+                بعض الإعدادات الحساسة مثل النسخ الاحتياطي واستعادة البيانات متاحة فقط للمالك لحماية البيانات.
+            </p>
+        </div>
+    </div>
+
+    <!-- ==================== 10. SECURITY ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">🔒</span>
+            <h2>10. الأمان وحماية البيانات</h2>
+        </div>
+
+        <p>
+            أمان البيانات أولوية قصوى في النظام. تم تطبيق عدة طبقات من الحماية:
+        </p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon">🔐</div>
+                <h4>تسجيل دخول آمن</h4>
+                <p>كل موظف يدخل بالبريد الإلكتروني وكلمة مرور مشفرة — لا يوجد وصول بدون حساب</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🛡️</div>
+                <h4>صلاحيات متدرجة</h4>
+                <p>كل مستخدم يرى فقط ما يخصه — الموظف لا يمكنه الوصول لبيانات المحاسبة مثلاً</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔒</div>
+                <h4>حماية قاعدة البيانات</h4>
+                <p>قواعد أمان على مستوى قاعدة البيانات تمنع أي وصول غير مصرح به</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🌐</div>
+                <h4>اتصال مشفر</h4>
+                <p>جميع البيانات تنتقل عبر اتصال مشفر (HTTPS) لحمايتها من الاختراق</p>
+            </div>
+        </div>
+
+        <h3>ملخص طبقات الحماية</h3>
+        <div class="flow-steps">
+            <div class="flow-step">
+                <div class="flow-step-number">1</div>
+                <div class="flow-step-content">
+                    <h4>المصادقة (Authentication)</h4>
+                    <p>التحقق من هوية المستخدم عبر البريد الإلكتروني وكلمة المرور</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="flow-step-number">2</div>
+                <div class="flow-step-content">
+                    <h4>التفويض (Authorization)</h4>
+                    <p>التحقق من صلاحيات المستخدم — هل يحق له الوصول لهذا القسم؟</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="flow-step-number">3</div>
+                <div class="flow-step-content">
+                    <h4>حماية الواجهة</h4>
+                    <p>إخفاء الأقسام والأزرار التي لا يحق للمستخدم الوصول إليها</p>
+                </div>
+            </div>
+            <div class="flow-step">
+                <div class="flow-step-number">4</div>
+                <div class="flow-step-content">
+                    <h4>حماية قاعدة البيانات</h4>
+                    <p>قواعد أمان على مستوى الجداول تمنع القراءة أو الكتابة غير المصرح بها</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 11. TECH SUMMARY ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">🛠️</span>
+            <h2>11. البنية التقنية (ملخص مبسط)</h2>
+        </div>
+
+        <p>
+            هذا القسم يقدم نظرة مبسطة على التقنيات المستخدمة في بناء النظام — بدون تعقيدات تقنية.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>المكون</th>
+                    <th>التقنية</th>
+                    <th>الدور</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>واجهة المستخدم</td>
+                    <td>React + TypeScript</td>
+                    <td>بناء الشاشات والصفحات التي يتعامل معها المستخدم</td>
+                </tr>
+                <tr>
+                    <td>التصميم</td>
+                    <td>Tailwind CSS</td>
+                    <td>تصميم مظهر النظام بشكل حديث وجميل</td>
+                </tr>
+                <tr>
+                    <td>قاعدة البيانات</td>
+                    <td>Firebase (Firestore)</td>
+                    <td>تخزين جميع بيانات الأعضاء والاشتراكات والمدفوعات مع تحديث لحظي</td>
+                </tr>
+                <tr>
+                    <td>المصادقة</td>
+                    <td>Firebase Auth</td>
+                    <td>إدارة تسجيل الدخول وحماية الحسابات</td>
+                </tr>
+                <tr>
+                    <td>الاستضافة</td>
+                    <td>Cloud Hosting</td>
+                    <td>النظام يعمل على الإنترنت ومتاح 24/7</td>
+                </tr>
+                <tr>
+                    <td>الأيقونات</td>
+                    <td>Lucide Icons</td>
+                    <td>أيقونات حديثة وعصرية في واجهة النظام</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <h4>🏗️ بنية النظام ببساطة</h4>
+            <p>
+                النظام يعمل كتطبيق ويب حديث (Single Page Application). هذا يعني أنه يعمل بسلاسة بدون إعادة تحميل الصفحة عند الانتقال بين الأقسام — تماماً مثل تطبيقات الموبايل. البيانات تُخزن بأمان في قاعدة بيانات سحابية (Cloud) مما يعني أنه لا يوجد خطر فقدان البيانات حتى لو تعطل جهاز الكمبيوتر.
+            </p>
+        </div>
+    </div>
+
+    <!-- ==================== 12. FUTURE PLANS ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">🚀</span>
+            <h2>12. خطة التطوير المستقبلية</h2>
+        </div>
+
+        <p>
+            النظام مصمم ليكون قابلاً للتوسع والتطوير. فيما يلي بعض التحسينات المقترحة للمستقبل:
+        </p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon">📱</div>
+                <h4>تطبيق موبايل</h4>
+                <p>تطبيق خاص للأعضاء يمكنهم من متابعة اشتراكهم ومدفوعاتهم وحجز الجلسات</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📊</div>
+                <h4>تقارير متقدمة</h4>
+                <p>رسوم بيانية وتحليلات أعمق لأداء الجيم مع مقارنات شهرية وسنوية</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">💬</div>
+                <h4>رسائل واتساب تلقائية</h4>
+                <p>إرسال تذكيرات تلقائية للأعضاء عند اقتراب انتهاء اشتراكهم</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🖨️</div>
+                <h4>طباعة الإيصالات</h4>
+                <p>طباعة إيصالات دفع وفواتير للأعضاء</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📅</div>
+                <h4>نظام حجز الحصص</h4>
+                <p>حجز الحصص الجماعية والخاصة مع المدربين</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🏪</div>
+                <h4>نظام نقاط البيع</h4>
+                <p>بيع المنتجات (مكملات غذائية، ملابس رياضية) مع تتبع المخزون</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CLOSING ==================== -->
+    <div class="section page-break">
+        <div class="section-header">
+            <span class="section-icon">📌</span>
+            <h2>خلاصة</h2>
+        </div>
+
+        <p>
+            نظام <strong>The Hulk Gym</strong> هو حل متكامل وحديث لإدارة صالات الألعاب الرياضية. يجمع بين سهولة الاستخدام والأمان العالي وقوة الأداء. تم تصميمه بعناية ليلبي احتياجات الإدارة اليومية ويوفر رؤية واضحة عن أداء الجيم المالي والتشغيلي.
+        </p>
+
+        <div class="highlight-box gold">
+            <h4>💡 النتيجة</h4>
+            <p>
+                مع هذا النظام، يمكن لأصحاب الجيم التركيز على تطوير أعمالهم وخدمة أعضائهم بدلاً من الانشغال بالأعمال الإدارية والورقية. كل شيء مؤتمت ومتابع ومحمي.
+            </p>
+        </div>
+
+        <div style="margin-top: 50px; padding: 30px; border: 2px solid #302b63; border-radius: 15px; text-align: center;">
+            <h3 style="color: #302b63; border: none; padding: 0; margin: 0 0 15px;">المهندسون المشرفون على المشروع</h3>
+            <div style="display: flex; justify-content: center; gap: 60px; margin-top: 20px;">
+                <div>
+                    <p style="font-size: 22px; font-weight: 800; color: #302b63;">م. كريم صالح</p>
+                    <p style="color: #888; font-size: 14px;">مهندس مشرف</p>
+                </div>
+                <div>
+                    <p style="font-size: 22px; font-weight: 800; color: #302b63;">م. مؤمن حجازي</p>
+                    <p style="color: #888; font-size: 14px;">مهندس مشرف</p>
+                </div>
+            </div>
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p style="color: #aaa; font-size: 13px;">يونيو 2026 — الإصدار 1.0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== FOOTER ==================== -->
+    <div class="report-footer">
+        <div class="footer-brand">THE HULK GYM 🏋️‍♂️</div>
+        <p>جميع الحقوق محفوظة © 2026</p>
+        <p>تم إعداد هذا التقرير كوثيقة تعريفية شاملة عن نظام إدارة الجيم</p>
+    </div>
+</div>
+
+</body>
+</html>

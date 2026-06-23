@@ -123,7 +123,7 @@ export const AddMember: React.FC = () => {
                   id="phone"
                   aria-label="رقم الهاتف"
                   type="tel"
-                  placeholder="+966 5XX XXX XXXX"
+                  placeholder="059XXXXXXX أو 056XXXXXXX"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="block w-full px-4 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/50 border border-slate-250 dark:border-slate-600 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-semibold"
