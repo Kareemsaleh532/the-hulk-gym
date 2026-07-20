@@ -44,6 +44,17 @@ const Accounting = React.lazy(() => import('./pages/Accounting').then(m => ({ de
 const Settings = React.lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 const Notifications = React.lazy(() => import('./pages/Notifications').then(m => ({ default: m.Notifications })));
 
+const MAINTENANCE_MODE = true;
+
+const MaintenanceScreen: React.FC = () => (
+  <div className="h-screen w-screen flex items-center justify-center bg-slate-950 px-6">
+    <div className="max-w-xl w-full rounded-2xl border border-slate-800 bg-slate-900/90 p-8 text-center shadow-2xl">
+      <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">الموقع متوقف مؤقتاً</h1>
+      <p className="text-slate-300 text-base sm:text-lg">الرجاء التواصل مع الدعم الفني</p>
+    </div>
+  </div>
+);
+
 const AppContent: React.FC = () => {
   const { currentAdmin, activeTab, setTab } = useGym();
   const { canAccessTab } = useAuth();
@@ -55,6 +66,10 @@ const AppContent: React.FC = () => {
       setTab('dashboard');
     }
   }, [activeTab, currentAdmin, canAccessTab, setTab]);
+
+  if (MAINTENANCE_MODE) {
+    return <MaintenanceScreen />;
+  }
 
   // If not authenticated or on login, render login page
   if (!currentAdmin || activeTab === 'login') {
